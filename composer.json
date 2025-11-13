@@ -1,0 +1,57 @@
+{
+    "name": "webhappens/laravel-syncpo",
+    "description": "Synchronize Laravel PHP translation arrays with PO (Portable Object) files, with optional POEditor integration",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "translations",
+        "gettext",
+        "po",
+        "poeditor",
+        "i18n",
+        "localization"
+    ],
+    "authors": [
+        {
+            "name": "WebHappens",
+            "email": "hello@webhappens.co.uk",
+            "homepage": "https://webhappens.co.uk"
+        }
+    ],
+    "require": {
+        "php": "^8.1|^8.2|^8.3",
+        "illuminate/console": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0",
+        "illuminate/translation": "^10.0|^11.0|^12.0",
+        "gettext/gettext": "^5.7",
+        "symfony/finder": "^6.0|^7.0",
+        "symfony/var-exporter": "^6.0|^7.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.0|^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WebHappens\\LaravelPoSync\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WebHappens\\LaravelPoSync\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "WebHappens\\LaravelPoSync\\PoSyncServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

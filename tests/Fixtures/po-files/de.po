@@ -1,0 +1,23 @@
+msgid ""
+msgstr ""
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgctxt "actions.save"
+msgid "Save"
+msgstr "Speichern"
+
+msgctxt "actions.cancel"
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#, fuzzy
+msgctxt "actions.delete"
+msgid "Delete"
+msgstr "Löschen (unsicher)"
+
+msgctxt "messages.welcome"
+msgid "Welcome to our application!"
+msgstr "Willkommen in unserer Anwendung!"
