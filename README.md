@@ -1,5 +1,6 @@
 # Laravel SyncPO
 
+[![Tests](https://github.com/webhappens/laravel-syncpo/workflows/Tests/badge.svg)](https://github.com/webhappens/laravel-syncpo/actions)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/webhappens/laravel-syncpo.svg)](https://packagist.org/packages/webhappens/laravel-syncpo)
 [![Total Downloads](https://img.shields.io/packagist/dt/webhappens/laravel-syncpo.svg)](https://packagist.org/packages/webhappens/laravel-syncpo)
 [![License](https://img.shields.io/packagist/l/webhappens/laravel-syncpo.svg)](https://packagist.org/packages/webhappens/laravel-syncpo)
@@ -21,8 +22,8 @@ Perfect for teams using translation management services like POEditor, Crowdin, 
 
 ## Requirements
 
-- PHP 8.1 or higher
-- Laravel 10.x or 11.x
+- PHP 8.2 or higher
+- Laravel 11.x or higher
 
 ## Installation
 
