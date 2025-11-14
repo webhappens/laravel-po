@@ -1,9 +1,9 @@
 <?php
 
-namespace WebHappens\LaravelPoSync\Tests\Feature;
+namespace WebHappens\LaravelPo\Tests\Feature;
 
 use Illuminate\Support\Facades\File;
-use WebHappens\LaravelPoSync\Tests\TestCase;
+use WebHappens\LaravelPo\Tests\TestCase;
 
 class ExportCommandTest extends TestCase
 {
@@ -18,7 +18,7 @@ class ExportCommandTest extends TestCase
         ]);
 
         // Run export command
-        $this->artisan('po-sync:export')->assertSuccessful();
+        $this->artisan('po:export')->assertSuccessful();
 
         // Assert PO file was created
         $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
@@ -36,7 +36,7 @@ class ExportCommandTest extends TestCase
             'welcome' => 'Hello :name, you have :count messages',
         ]);
 
-        $this->artisan('po-sync:export')->assertSuccessful();
+        $this->artisan('po:export')->assertSuccessful();
 
         $content = $this->getExportedPoFile('en');
         // Should convert :name to {name} and :count to {count}
@@ -49,13 +49,13 @@ class ExportCommandTest extends TestCase
     public function it_excludes_configured_translation_groups()
     {
         // Configure excluded groups
-        config(['po-sync.excluded_groups' => ['auth', 'validation']]);
+        config(['po.excluded_groups' => ['auth', 'validation']]);
 
         $this->createTranslationFile('en', 'actions', ['save' => 'Save']);
         $this->createTranslationFile('en', 'auth', ['failed' => 'These credentials do not match']);
         $this->createTranslationFile('en', 'validation', ['required' => 'The :attribute field is required']);
 
-        $this->artisan('po-sync:export')->assertSuccessful();
+        $this->artisan('po:export')->assertSuccessful();
 
         $content = $this->getExportedPoFile('en');
 
@@ -78,7 +78,7 @@ class ExportCommandTest extends TestCase
             ],
         ]);
 
-        $this->artisan('po-sync:export')->assertSuccessful();
+        $this->artisan('po:export')->assertSuccessful();
 
         $content = $this->getExportedPoFile('en');
 
@@ -96,13 +96,13 @@ class ExportCommandTest extends TestCase
         $this->createTranslationFile('fr', 'actions', ['save' => 'Enregistrer']);
 
         // Configure languages
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'en' => ['label' => 'English', 'enabled' => true],
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
         // Export only French
-        $this->artisan('po-sync:export', ['lang' => ['fr']])->assertSuccessful();
+        $this->artisan('po:export', ['lang' => ['fr']])->assertSuccessful();
 
         // Should only create French PO file
         $this->assertFalse(File::exists($this->tempExportPath.'/en.po'));
@@ -119,7 +119,7 @@ class ExportCommandTest extends TestCase
 
         $this->createTranslationFile('en', 'actions', ['save' => 'Save']);
 
-        $this->artisan('po-sync:export')->assertSuccessful();
+        $this->artisan('po:export')->assertSuccessful();
 
         // Directory should be created
         $this->assertTrue(File::exists($this->tempExportPath));
@@ -130,7 +130,7 @@ class ExportCommandTest extends TestCase
     public function it_auto_detects_languages_when_not_configured()
     {
         // Don't configure languages, let it auto-detect
-        config(['po-sync.languages' => []]);
+        config(['po.languages' => []]);
 
         // Create translation directories
         $this->createTranslationFile('en', 'actions', ['save' => 'Save']);
@@ -138,7 +138,7 @@ class ExportCommandTest extends TestCase
         $this->createTranslationFile('de', 'actions', ['save' => 'Speichern']);
 
         // Export should work with all detected languages
-        $this->artisan('po-sync:export', ['lang' => ['fr']])->assertSuccessful();
+        $this->artisan('po:export', ['lang' => ['fr']])->assertSuccessful();
 
         $this->assertTrue(File::exists($this->tempExportPath.'/fr.po'));
     }
@@ -152,7 +152,7 @@ class ExportCommandTest extends TestCase
             'null_value' => null,
         ]);
 
-        $this->artisan('po-sync:export')->assertSuccessful();
+        $this->artisan('po:export')->assertSuccessful();
 
         $content = $this->getExportedPoFile('en');
 

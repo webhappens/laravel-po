@@ -1,6 +1,6 @@
 <?php
 
-namespace WebHappens\LaravelPoSync\Commands;
+namespace WebHappens\LaravelPo\Commands;
 
 use Gettext\Languages\Language;
 use Gettext\Loader\PoLoader;
@@ -15,7 +15,7 @@ use Symfony\Component\VarExporter\VarExporter;
 
 class ImportCommand extends Command
 {
-    protected $signature = 'po-sync:import
+    protected $signature = 'po:import
         {lang?* : Provide the language codes for generation, or leave blank for all }
         {--fuzzy : Include fuzzy translations }
         {--only=* : Limit keys to only those that match a specific pattern }
@@ -35,7 +35,7 @@ class ImportCommand extends Command
                 ->filter([$this, 'matchesPattern'])
                 ->groupBy(fn ($translation) => Str::before($translation->getContext(), '.'))
                 ->each(function ($translations, $group) use ($locale) {
-                    $langPath = config('po-sync.paths.lang');
+                    $langPath = config('po.paths.lang');
                     $groupFile = $langPath.'/'.$locale.DIRECTORY_SEPARATOR."$group.php";
                     $nonMatchingTranslations = collect();
 
@@ -98,7 +98,7 @@ class ImportCommand extends Command
                 });
 
             // Call optional cache clearing callback if configured
-            if ($callback = config('po-sync.cache.clear_callback')) {
+            if ($callback = config('po.cache.clear_callback')) {
                 $callback($locale);
             }
 
@@ -137,12 +137,12 @@ class ImportCommand extends Command
 
     protected function getLanguageFiles(): Collection
     {
-        $importPath = config('po-sync.paths.import');
-        $configuredLanguages = config('po-sync.languages', []);
+        $importPath = config('po.paths.import');
+        $configuredLanguages = config('po.languages', []);
 
         // Auto-detect enabled languages if not configured
         if (empty($configuredLanguages)) {
-            $langPath = config('po-sync.paths.lang');
+            $langPath = config('po.paths.lang');
             $directories = File::directories($langPath);
 
             $enabledLocales = collect($directories)

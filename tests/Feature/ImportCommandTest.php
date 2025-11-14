@@ -1,9 +1,9 @@
 <?php
 
-namespace WebHappens\LaravelPoSync\Tests\Feature;
+namespace WebHappens\LaravelPo\Tests\Feature;
 
 use Illuminate\Support\Facades\File;
-use WebHappens\LaravelPoSync\Tests\TestCase;
+use WebHappens\LaravelPo\Tests\TestCase;
 
 class ImportCommandTest extends TestCase
 {
@@ -26,11 +26,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import')->assertSuccessful();
+        $this->artisan('po:import')->assertSuccessful();
 
         // Assert PHP file was created
         $translations = $this->getGeneratedTranslations('fr', 'actions');
@@ -54,11 +54,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import')->assertSuccessful();
+        $this->artisan('po:import')->assertSuccessful();
 
         $translations = $this->getGeneratedTranslations('fr', 'messages');
 
@@ -93,11 +93,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import')->assertSuccessful();
+        $this->artisan('po:import')->assertSuccessful();
 
         // Should create separate files for actions and messages
         $this->assertTrue(File::exists($this->tempLangPath.'/fr/actions.php'));
@@ -136,11 +136,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import')->assertSuccessful();
+        $this->artisan('po:import')->assertSuccessful();
 
         $translations = $this->getGeneratedTranslations('fr', 'actions');
 
@@ -180,11 +180,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import', ['--replace' => true])->assertSuccessful();
+        $this->artisan('po:import', ['--replace' => true])->assertSuccessful();
 
         $translations = $this->getGeneratedTranslations('fr', 'actions');
 
@@ -218,11 +218,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import')->assertSuccessful();
+        $this->artisan('po:import')->assertSuccessful();
 
         $translations = $this->getGeneratedTranslations('fr', 'actions');
 
@@ -253,11 +253,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import', ['--fuzzy' => true])->assertSuccessful();
+        $this->artisan('po:import', ['--fuzzy' => true])->assertSuccessful();
 
         $translations = $this->getGeneratedTranslations('fr', 'actions');
 
@@ -290,11 +290,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import', ['--only' => ['actions.*']])->assertSuccessful();
+        $this->artisan('po:import', ['--only' => ['actions.*']])->assertSuccessful();
 
         // Should only import actions
         $this->assertTrue(File::exists($this->tempLangPath.'/fr/actions.php'));
@@ -331,13 +331,13 @@ PO;
         $this->createPoFile('fr', $frPoContent);
         $this->createPoFile('de', $dePoContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
             'de' => ['label' => 'German', 'enabled' => true],
         ]]);
 
         // Import only French
-        $this->artisan('po-sync:import', ['lang' => ['fr']])->assertSuccessful();
+        $this->artisan('po:import', ['lang' => ['fr']])->assertSuccessful();
 
         // Should only import French
         $this->assertTrue(File::exists($this->tempLangPath.'/fr/actions.php'));
@@ -350,7 +350,7 @@ PO;
         $callbackCalled = false;
         $calledLocale = null;
 
-        config(['po-sync.cache.clear_callback' => function ($locale) use (&$callbackCalled, &$calledLocale) {
+        config(['po.cache.clear_callback' => function ($locale) use (&$callbackCalled, &$calledLocale) {
             $callbackCalled = true;
             $calledLocale = $locale;
         }]);
@@ -367,11 +367,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import')->assertSuccessful();
+        $this->artisan('po:import')->assertSuccessful();
 
         $this->assertTrue($callbackCalled);
         $this->assertEquals('fr', $calledLocale);
@@ -395,11 +395,11 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        config(['po-sync.languages' => [
+        config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po-sync:import', ['--replace' => true])->assertSuccessful();
+        $this->artisan('po:import', ['--replace' => true])->assertSuccessful();
 
         // File should be deleted since all translations are empty
         $this->assertFalse(File::exists($this->tempLangPath.'/fr/actions.php'));
@@ -408,7 +408,7 @@ PO;
     /** @test */
     public function it_auto_detects_enabled_languages_when_not_configured()
     {
-        config(['po-sync.languages' => []]);
+        config(['po.languages' => []]);
 
         // Create language directories
         File::makeDirectory($this->tempLangPath.'/fr', 0755, true);
@@ -426,7 +426,7 @@ PO;
 
         $this->createPoFile('fr', $poContent);
 
-        $this->artisan('po-sync:import')->assertSuccessful();
+        $this->artisan('po:import')->assertSuccessful();
 
         $this->assertTrue(File::exists($this->tempLangPath.'/fr/actions.php'));
     }

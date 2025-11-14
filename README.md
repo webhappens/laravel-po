@@ -1,9 +1,9 @@
-# Laravel SyncPO
+# Laravel PO
 
-[![Tests](https://github.com/webhappens/laravel-syncpo/workflows/Tests/badge.svg)](https://github.com/webhappens/laravel-syncpo/actions)
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/webhappens/laravel-syncpo.svg)](https://packagist.org/packages/webhappens/laravel-syncpo)
-[![Total Downloads](https://img.shields.io/packagist/dt/webhappens/laravel-syncpo.svg)](https://packagist.org/packages/webhappens/laravel-syncpo)
-[![License](https://img.shields.io/packagist/l/webhappens/laravel-syncpo.svg)](https://packagist.org/packages/webhappens/laravel-syncpo)
+[![Tests](https://github.com/webhappens/laravel-po/workflows/Tests/badge.svg)](https://github.com/webhappens/laravel-po/actions)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/webhappens/laravel-po.svg)](https://packagist.org/packages/webhappens/laravel-po)
+[![Total Downloads](https://img.shields.io/packagist/dt/webhappens/laravel-po.svg)](https://packagist.org/packages/webhappens/laravel-po)
+[![License](https://img.shields.io/packagist/l/webhappens/laravel-po.svg)](https://packagist.org/packages/webhappens/laravel-po)
 
 A Laravel package for synchronizing Laravel PHP translation arrays with PO (Portable Object) files, with optional POEditor integration.
 
@@ -30,7 +30,7 @@ Perfect for teams using translation management services like POEditor, Crowdin, 
 Install the package via Composer:
 
 ```bash
-composer require webhappens/laravel-syncpo
+composer require webhappens/laravel-po
 ```
 
 The service provider will be automatically registered via Laravel's package discovery.
@@ -40,10 +40,10 @@ The service provider will be automatically registered via Laravel's package disc
 Publish the configuration file to customize paths and settings:
 
 ```bash
-php artisan vendor:publish --tag=po-sync-config
+php artisan vendor:publish --tag=po-config
 ```
 
-This will create a `config/po-sync.php` file where you can configure:
+This will create a `config/po.php` file where you can configure:
 
 - Export and import directory paths
 - Excluded translation groups
@@ -56,7 +56,7 @@ This will create a `config/po-sync.php` file where you can configure:
 ### Basic Configuration
 
 ```php
-// config/po-sync.php
+// config/po.php
 
 return [
     'paths' => [
@@ -96,7 +96,7 @@ POEDITOR_PROJECT_ID=your-project-id-here
 If your application caches compiled translation catalogues, configure a callback to clear the cache after importing:
 
 ```php
-// config/po-sync.php
+// config/po.php
 
 'cache' => [
     'clear_callback' => function ($locale) {
@@ -113,13 +113,13 @@ If your application caches compiled translation catalogues, configure a callback
 Export all translations for the default language:
 
 ```bash
-php artisan po-sync:export
+php artisan po:export
 ```
 
 Export translations for specific languages:
 
 ```bash
-php artisan po-sync:export fr de es
+php artisan po:export fr de es
 ```
 
 This will create PO files in your configured export directory (default: `lang/export/`):
@@ -136,13 +136,13 @@ lang/export/
 Import all available PO files:
 
 ```bash
-php artisan po-sync:import
+php artisan po:import
 ```
 
 Import specific languages:
 
 ```bash
-php artisan po-sync:import fr de
+php artisan po:import fr de
 ```
 
 #### Import Options
@@ -150,20 +150,20 @@ php artisan po-sync:import fr de
 **Include fuzzy translations:**
 
 ```bash
-php artisan po-sync:import --fuzzy
+php artisan po:import --fuzzy
 ```
 
 **Filter to specific translation keys:**
 
 ```bash
-php artisan po-sync:import --only=actions.*
-php artisan po-sync:import --only=messages.* --only=actions.*
+php artisan po:import --only=actions.*
+php artisan po:import --only=messages.* --only=actions.*
 ```
 
 **Replace existing translations instead of merging:**
 
 ```bash
-php artisan po-sync:import --replace
+php artisan po:import --replace
 ```
 
 By default, imports will merge new translations with existing ones. Use `--replace` to completely replace the translation files.
@@ -174,16 +174,16 @@ Download PO files from POEditor (requires POEditor configuration):
 
 ```bash
 # Download all enabled languages
-php artisan po-sync:download --all
+php artisan po:download --all
 
 # Download specific languages
-php artisan po-sync:download fr de es
+php artisan po:download fr de es
 ```
 
 Downloaded files will be saved to your import directory. Then run the import command:
 
 ```bash
-php artisan po-sync:import
+php artisan po:import
 ```
 
 ## Workflow Example
@@ -192,7 +192,7 @@ php artisan po-sync:import
 
 1. **Export your current translations:**
    ```bash
-   php artisan po-sync:export
+   php artisan po:export
    ```
 
 2. **Upload PO files to POEditor** (manually or via their API)
@@ -201,12 +201,12 @@ php artisan po-sync:import
 
 4. **Download updated translations:**
    ```bash
-   php artisan po-sync:download --all
+   php artisan po:download --all
    ```
 
 5. **Import the translations:**
    ```bash
-   php artisan po-sync:import
+   php artisan po:import
    ```
 
 6. **Commit the updated translation files to your repository**
@@ -215,7 +215,7 @@ php artisan po-sync:import
 
 1. **Export translations:**
    ```bash
-   php artisan po-sync:export fr de es
+   php artisan po:export fr de es
    ```
 
 2. **Send PO files** from `lang/export/` to your translation agency
@@ -224,7 +224,7 @@ php artisan po-sync:import
 
 4. **Import the translations:**
    ```bash
-   php artisan po-sync:import
+   php artisan po:import
    ```
 
 ## How It Works
@@ -305,7 +305,7 @@ msgstr "..."
 Run the test suite:
 
 ```bash
-cd ~/Sites/packages/laravel-syncpo
+cd ~/Sites/packages/laravel-po
 composer test
 ```
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace WebHappens\LaravelPoSync\Commands;
+namespace WebHappens\LaravelPo\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 
 class PoeditorDownloadCommand extends Command
 {
-    protected $signature = 'po-sync:download
+    protected $signature = 'po:download
         {lang?* : A list of language codes to download }
         {--all : Download all active languages }';
 
@@ -17,14 +17,14 @@ class PoeditorDownloadCommand extends Command
 
     public function handle(): int
     {
-        if (! config('po-sync.poeditor.enabled')) {
+        if (! config('po.poeditor.enabled')) {
             $this->components->error('POEditor integration is not enabled. Set POEDITOR_ENABLED=true in your .env file.');
 
             return Command::FAILURE;
         }
 
-        $apiToken = config('po-sync.poeditor.api_token');
-        $projectId = config('po-sync.poeditor.project_id');
+        $apiToken = config('po.poeditor.api_token');
+        $projectId = config('po.poeditor.project_id');
 
         if (! $apiToken || ! $projectId) {
             $this->components->error('POEditor API credentials not configured. Please set POEDITOR_API_TOKEN and POEDITOR_PROJECT_ID in your .env file.');
@@ -33,7 +33,7 @@ class PoeditorDownloadCommand extends Command
         }
 
         // Ensure import directory exists
-        $importPath = config('po-sync.paths.import');
+        $importPath = config('po.paths.import');
         if (! File::isDirectory($importPath)) {
             File::makeDirectory($importPath, 0755, true);
         }
@@ -58,9 +58,9 @@ class PoeditorDownloadCommand extends Command
         $this->newLine();
 
         if ($success) {
-            $importPath = config('po-sync.paths.import');
+            $importPath = config('po.paths.import');
             $this->components->info("All translations downloaded successfully to $importPath/");
-            $this->components->info('Run "php artisan po-sync:import" to import them.');
+            $this->components->info('Run "php artisan po:import" to import them.');
 
             return Command::SUCCESS;
         }
@@ -118,7 +118,7 @@ class PoeditorDownloadCommand extends Command
             }
 
             // Step 3: Save to import directory
-            $importPath = config('po-sync.paths.import');
+            $importPath = config('po.paths.import');
             $filePath = $importPath."/$locale.po";
             File::put($filePath, $fileResponse->body());
 
@@ -130,11 +130,11 @@ class PoeditorDownloadCommand extends Command
 
     protected function getLocales(): Collection
     {
-        $configuredLanguages = config('po-sync.languages', []);
+        $configuredLanguages = config('po.languages', []);
 
         // Auto-detect enabled languages if not configured
         if (empty($configuredLanguages)) {
-            $langPath = config('po-sync.paths.lang');
+            $langPath = config('po.paths.lang');
             $directories = File::directories($langPath);
 
             $languages = collect($directories)

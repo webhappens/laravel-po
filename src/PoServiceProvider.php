@@ -1,13 +1,13 @@
 <?php
 
-namespace WebHappens\LaravelPoSync;
+namespace WebHappens\LaravelPo;
 
 use Illuminate\Support\ServiceProvider;
-use WebHappens\LaravelPoSync\Commands\ExportCommand;
-use WebHappens\LaravelPoSync\Commands\ImportCommand;
-use WebHappens\LaravelPoSync\Commands\PoeditorDownloadCommand;
+use WebHappens\LaravelPo\Commands\ExportCommand;
+use WebHappens\LaravelPo\Commands\ImportCommand;
+use WebHappens\LaravelPo\Commands\PoeditorDownloadCommand;
 
-class PoSyncServiceProvider extends ServiceProvider
+class PoServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
@@ -15,8 +15,8 @@ class PoSyncServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../config/po-sync.php',
-            'po-sync'
+            __DIR__.'/../config/po.php',
+            'po'
         );
     }
 
@@ -27,8 +27,8 @@ class PoSyncServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../config/po-sync.php' => config_path('po-sync.php'),
-            ], 'po-sync-config');
+                __DIR__.'/../config/po.php' => config_path('po.php'),
+            ], 'po-config');
 
             $this->commands([
                 ExportCommand::class,

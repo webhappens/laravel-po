@@ -70,7 +70,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configure POEditor API integration for downloading translations.
-    | The po-sync:download command will use these credentials.
+    | The po:download command will use these credentials.
     |
     */
 

@@ -12,14 +12,14 @@
 If you haven't already, install the package dependencies:
 
 ```bash
-cd ~/Sites/packages/laravel-syncpo
+cd ~/Sites/packages/laravel-po
 composer install
 ```
 
 ### Running All Tests
 
 ```bash
-cd ~/Sites/packages/laravel-syncpo
+cd ~/Sites/packages/laravel-po
 composer test
 ```
 
@@ -147,22 +147,22 @@ vendor/bin/phpunit --stop-on-failure
 ## Writing New Tests
 
 1. Create test files in `tests/Feature/`
-2. Extend `WebHappens\LaravelPoSync\Tests\TestCase`
+2. Extend `WebHappens\LaravelPo\Tests\TestCase`
 3. Use helper methods:
    - `createTranslationFile($locale, $group, $translations)`
    - `createPoFile($locale, $content)`
    - `getExportedPoFile($locale)`
    - `getGeneratedTranslations($locale, $group)`
-4. Test commands with: `$this->artisan('po-sync:command')`
+4. Test commands with: `$this->artisan('po:command')`
 
 Example:
 
 ```php
 <?php
 
-namespace WebHappens\LaravelPoSync\Tests\Feature;
+namespace WebHappens\LaravelPo\Tests\Feature;
 
-use WebHappens\LaravelPoSync\Tests\TestCase;
+use WebHappens\LaravelPo\Tests\TestCase;
 
 class MyNewTest extends TestCase
 {
@@ -171,7 +171,7 @@ class MyNewTest extends TestCase
     {
         $this->createTranslationFile('en', 'test', ['hello' => 'world']);
 
-        $this->artisan('po-sync:export')->assertSuccessful();
+        $this->artisan('po:export')->assertSuccessful();
 
         $content = $this->getExportedPoFile('en');
         $this->assertStringContainsString('hello', $content);

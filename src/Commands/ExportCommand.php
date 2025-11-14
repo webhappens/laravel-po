@@ -1,6 +1,6 @@
 <?php
 
-namespace WebHappens\LaravelPoSync\Commands;
+namespace WebHappens\LaravelPo\Commands;
 
 use Gettext\Generator\PoGenerator;
 use Gettext\Languages\Language;
@@ -16,7 +16,7 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class ExportCommand extends Command
 {
-    protected $signature = 'po-sync:export
+    protected $signature = 'po:export
         {lang?* : Provide the language codes for generation, or leave blank for default language }';
 
     protected $description = 'Generate PO files for language translation';
@@ -37,7 +37,7 @@ class ExportCommand extends Command
         $pot = $this->getTranslationTerms($appLocale);
 
         // Ensure export directory exists
-        $exportPath = config('po-sync.paths.export');
+        $exportPath = config('po.paths.export');
         if (! File::exists($exportPath)) {
             File::makeDirectory($exportPath, 0755, true);
         }
@@ -97,7 +97,7 @@ class ExportCommand extends Command
 
     public function shouldIncludeTranslation(string $translation, string $key): bool
     {
-        $exclude = config('po-sync.excluded_groups', []);
+        $exclude = config('po.excluded_groups', []);
 
         return ! collect($exclude)
             ->first(fn ($pattern) => str($key)->is($pattern.'*'));
@@ -112,11 +112,11 @@ class ExportCommand extends Command
 
     protected function getLocales(): Collection
     {
-        $configuredLanguages = config('po-sync.languages', []);
+        $configuredLanguages = config('po.languages', []);
 
         // Auto-detect languages from directories if not configured
         if (empty($configuredLanguages)) {
-            $langPath = config('po-sync.paths.lang');
+            $langPath = config('po.paths.lang');
             $directories = File::directories($langPath);
 
             $configuredLanguages = collect($directories)
@@ -145,6 +145,6 @@ class ExportCommand extends Command
             $locale = app()->getLocale();
         }
 
-        return config('po-sync.paths.lang').'/'.$locale;
+        return config('po.paths.lang').'/'.$locale;
     }
 }

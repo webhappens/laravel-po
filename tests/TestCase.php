@@ -1,10 +1,10 @@
 <?php
 
-namespace WebHappens\LaravelPoSync\Tests;
+namespace WebHappens\LaravelPo\Tests;
 
 use Illuminate\Support\Facades\File;
 use Orchestra\Testbench\TestCase as Orchestra;
-use WebHappens\LaravelPoSync\PoSyncServiceProvider;
+use WebHappens\LaravelPo\PoServiceProvider;
 
 abstract class TestCase extends Orchestra
 {
@@ -17,7 +17,7 @@ abstract class TestCase extends Orchestra
         parent::setUp();
 
         // Create temporary directories for testing
-        $this->tempLangPath = sys_get_temp_dir().'/laravel-syncpo-test-'.uniqid();
+        $this->tempLangPath = sys_get_temp_dir().'/laravel-po-test-'.uniqid();
         $this->tempExportPath = $this->tempLangPath.'/export';
         $this->tempImportPath = $this->tempLangPath.'/import';
 
@@ -27,9 +27,9 @@ abstract class TestCase extends Orchestra
 
         // Override config with test paths
         config([
-            'po-sync.paths.lang' => $this->tempLangPath,
-            'po-sync.paths.export' => $this->tempExportPath,
-            'po-sync.paths.import' => $this->tempImportPath,
+            'po.paths.lang' => $this->tempLangPath,
+            'po.paths.export' => $this->tempExportPath,
+            'po.paths.import' => $this->tempImportPath,
         ]);
     }
 
@@ -46,7 +46,7 @@ abstract class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
-            PoSyncServiceProvider::class,
+            PoServiceProvider::class,
         ];
     }
 

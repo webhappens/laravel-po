@@ -1,5 +1,5 @@
 {
-    "name": "webhappens/laravel-syncpo",
+    "name": "webhappens/laravel-po",
     "description": "Synchronize Laravel PHP translation arrays with PO (Portable Object) files, with optional POEditor integration",
     "type": "library",
     "license": "MIT",
@@ -35,18 +35,18 @@
     },
     "autoload": {
         "psr-4": {
-            "WebHappens\\LaravelPoSync\\": "src/"
+            "WebHappens\\LaravelPo\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "WebHappens\\LaravelPoSync\\Tests\\": "tests/"
+            "WebHappens\\LaravelPo\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "WebHappens\\LaravelPoSync\\PoSyncServiceProvider"
+                "WebHappens\\LaravelPo\\PoServiceProvider"
             ]
         }
     },
