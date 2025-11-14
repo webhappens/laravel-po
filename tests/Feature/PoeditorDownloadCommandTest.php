@@ -4,6 +4,7 @@ namespace WebHappens\LaravelPo\Tests\Feature;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
 use WebHappens\LaravelPo\Tests\TestCase;
 
 class PoeditorDownloadCommandTest extends TestCase
@@ -20,7 +21,7 @@ class PoeditorDownloadCommandTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_fails_when_poeditor_integration_is_not_enabled()
     {
         config(['po.poeditor.enabled' => false]);
@@ -30,7 +31,7 @@ class PoeditorDownloadCommandTest extends TestCase
             ->expectsOutputToContain('POEditor integration is not enabled');
     }
 
-    /** @test */
+    #[Test]
     public function it_fails_when_api_credentials_are_missing()
     {
         config([
@@ -43,7 +44,7 @@ class PoeditorDownloadCommandTest extends TestCase
             ->expectsOutputToContain('POEditor API credentials not configured');
     }
 
-    /** @test */
+    #[Test]
     public function it_fails_when_no_languages_specified()
     {
         $this->artisan('po:download')
@@ -51,7 +52,7 @@ class PoeditorDownloadCommandTest extends TestCase
             ->expectsOutputToContain('No languages to download');
     }
 
-    /** @test */
+    #[Test]
     public function it_downloads_po_file_from_poeditor()
     {
         Http::fake([
@@ -82,7 +83,7 @@ class PoeditorDownloadCommandTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function it_downloads_specific_languages_when_provided_as_arguments()
     {
         Http::fake([
@@ -107,7 +108,7 @@ class PoeditorDownloadCommandTest extends TestCase
         $this->assertFalse(File::exists($this->tempImportPath.'/es.po'));
     }
 
-    /** @test */
+    #[Test]
     public function it_downloads_all_enabled_languages_with_all_flag()
     {
         Http::fake([
@@ -129,7 +130,7 @@ class PoeditorDownloadCommandTest extends TestCase
         $this->assertTrue(File::exists($this->tempImportPath.'/de.po'));
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_api_error_responses()
     {
         Http::fake([
@@ -145,7 +146,7 @@ class PoeditorDownloadCommandTest extends TestCase
         $this->artisan('po:download', ['--all' => true])->assertFailed();
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_http_request_failures()
     {
         Http::fake([
@@ -162,7 +163,7 @@ class PoeditorDownloadCommandTest extends TestCase
         $this->assertFalse(File::exists($this->tempImportPath.'/fr.po'));
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_missing_download_url_in_response()
     {
         Http::fake([
@@ -179,7 +180,7 @@ class PoeditorDownloadCommandTest extends TestCase
         $this->artisan('po:download', ['--all' => true])->assertFailed();
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_import_directory_if_not_exists()
     {
         File::deleteDirectory($this->tempImportPath);
@@ -204,7 +205,7 @@ class PoeditorDownloadCommandTest extends TestCase
         $this->assertTrue(File::exists($this->tempImportPath.'/fr.po'));
     }
 
-    /** @test */
+    #[Test]
     public function it_auto_detects_languages_when_not_configured()
     {
         config(['po.languages' => []]);
@@ -226,7 +227,7 @@ class PoeditorDownloadCommandTest extends TestCase
         $this->assertTrue(File::exists($this->tempImportPath.'/fr.po'));
     }
 
-    /** @test */
+    #[Test]
     public function it_suggests_running_import_command_after_successful_download()
     {
         Http::fake([

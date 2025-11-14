@@ -166,7 +166,7 @@ use WebHappens\LaravelPo\Tests\TestCase;
 
 class MyNewTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_does_something()
     {
         $this->createTranslationFile('en', 'test', ['hello' => 'world']);

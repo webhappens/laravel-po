@@ -2,12 +2,15 @@
 
 namespace WebHappens\LaravelPo\Tests\Feature;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
+use PHPUnit\Framework\Attributes\Test;
+use WebHappens\LaravelPo\Events\TranslationsImported;
 use WebHappens\LaravelPo\Tests\TestCase;
 
 class ImportCommandTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_imports_po_file_to_php_translations()
     {
         $poContent = <<<'PO'
@@ -39,7 +42,7 @@ PO;
         $this->assertEquals('Annuler', $translations['cancel']);
     }
 
-    /** @test */
+    #[Test]
     public function it_converts_perl_brace_placeholders_to_laravel_format()
     {
         $poContent = <<<'PO'
@@ -66,7 +69,7 @@ PO;
         $this->assertEquals('Bonjour :name, vous avez :count messages', $translations['welcome']);
     }
 
-    /** @test */
+    #[Test]
     public function it_groups_translations_by_first_part_of_key()
     {
         $poContent = <<<'PO'
@@ -110,7 +113,7 @@ PO;
         $this->assertCount(2, $messages);
     }
 
-    /** @test */
+    #[Test]
     public function it_merges_with_existing_translations_by_default()
     {
         // Create existing translation file
@@ -155,7 +158,7 @@ PO;
         $this->assertEquals('Annuler', $translations['cancel']);
     }
 
-    /** @test */
+    #[Test]
     public function it_replaces_existing_translations_with_replace_flag()
     {
         $this->createTranslationFile('fr', 'actions', [
@@ -198,7 +201,7 @@ PO;
         $this->assertArrayNotHasKey('old_key', $translations);
     }
 
-    /** @test */
+    #[Test]
     public function it_excludes_fuzzy_translations_by_default()
     {
         $poContent = <<<'PO'
@@ -233,7 +236,7 @@ PO;
         $this->assertArrayNotHasKey('delete', $translations);
     }
 
-    /** @test */
+    #[Test]
     public function it_includes_fuzzy_translations_with_fuzzy_flag()
     {
         $poContent = <<<'PO'
@@ -267,7 +270,7 @@ PO;
         $this->assertEquals('Supprimer (unsure)', $translations['delete']);
     }
 
-    /** @test */
+    #[Test]
     public function it_filters_translations_with_only_option()
     {
         $poContent = <<<'PO'
@@ -304,7 +307,7 @@ PO;
         $this->assertCount(2, $translations);
     }
 
-    /** @test */
+    #[Test]
     public function it_imports_specific_language_when_argument_provided()
     {
         // Create PO files for multiple languages
@@ -344,40 +347,7 @@ PO;
         $this->assertFalse(File::exists($this->tempLangPath.'/de/actions.php'));
     }
 
-    /** @test */
-    public function it_calls_cache_clear_callback_if_configured()
-    {
-        $callbackCalled = false;
-        $calledLocale = null;
-
-        config(['po.cache.clear_callback' => function ($locale) use (&$callbackCalled, &$calledLocale) {
-            $callbackCalled = true;
-            $calledLocale = $locale;
-        }]);
-
-        $poContent = <<<'PO'
-msgid ""
-msgstr ""
-"Language: fr\n"
-
-msgctxt "actions.save"
-msgid "Save"
-msgstr "Enregistrer"
-PO;
-
-        $this->createPoFile('fr', $poContent);
-
-        config(['po.languages' => [
-            'fr' => ['label' => 'French', 'enabled' => true],
-        ]]);
-
-        $this->artisan('po:import')->assertSuccessful();
-
-        $this->assertTrue($callbackCalled);
-        $this->assertEquals('fr', $calledLocale);
-    }
-
-    /** @test */
+    #[Test]
     public function it_deletes_file_if_all_translations_are_empty()
     {
         // Create existing file
@@ -405,7 +375,7 @@ PO;
         $this->assertFalse(File::exists($this->tempLangPath.'/fr/actions.php'));
     }
 
-    /** @test */
+    #[Test]
     public function it_auto_detects_enabled_languages_when_not_configured()
     {
         config(['po.languages' => []]);

@@ -3,11 +3,12 @@
 namespace WebHappens\LaravelPo\Tests\Feature;
 
 use Illuminate\Support\Facades\File;
+use PHPUnit\Framework\Attributes\Test;
 use WebHappens\LaravelPo\Tests\TestCase;
 
 class ExportCommandTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_exports_translations_to_po_file()
     {
         // Create translation files
@@ -29,7 +30,7 @@ class ExportCommandTest extends TestCase
         $this->assertStringContainsString('msgid "Save"', $content);
     }
 
-    /** @test */
+    #[Test]
     public function it_converts_laravel_placeholders_to_perl_brace_format()
     {
         $this->createTranslationFile('en', 'messages', [
@@ -45,7 +46,7 @@ class ExportCommandTest extends TestCase
         $this->assertStringNotContainsString(':count', $content);
     }
 
-    /** @test */
+    #[Test]
     public function it_excludes_configured_translation_groups()
     {
         // Configure excluded groups
@@ -67,7 +68,7 @@ class ExportCommandTest extends TestCase
         $this->assertStringNotContainsString('validation.required', $content);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_nested_translations()
     {
         $this->createTranslationFile('en', 'messages', [
@@ -88,7 +89,7 @@ class ExportCommandTest extends TestCase
         $this->assertStringContainsString('msgctxt "messages.nested.goodbye"', $content);
     }
 
-    /** @test */
+    #[Test]
     public function it_exports_specific_language_when_argument_provided()
     {
         // Create translations for multiple languages
@@ -109,7 +110,7 @@ class ExportCommandTest extends TestCase
         $this->assertTrue(File::exists($this->tempExportPath.'/fr.po'));
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_export_directory_if_not_exists()
     {
         // Delete export directory
@@ -126,7 +127,7 @@ class ExportCommandTest extends TestCase
         $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
     }
 
-    /** @test */
+    #[Test]
     public function it_auto_detects_languages_when_not_configured()
     {
         // Don't configure languages, let it auto-detect
@@ -143,7 +144,7 @@ class ExportCommandTest extends TestCase
         $this->assertTrue(File::exists($this->tempExportPath.'/fr.po'));
     }
 
-    /** @test */
+    #[Test]
     public function it_skips_empty_translation_values()
     {
         $this->createTranslationFile('en', 'messages', [
