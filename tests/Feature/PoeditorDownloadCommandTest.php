@@ -67,7 +67,7 @@ class PoeditorDownloadCommandTest extends TestCase
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po:download', ['--all' => true])->assertSuccessful();
+        $this->artisan('po:download', ['--active' => true])->assertSuccessful();
 
         // Assert file was saved
         $this->assertTrue(File::exists($this->tempImportPath.'/fr.po'));
@@ -109,7 +109,68 @@ class PoeditorDownloadCommandTest extends TestCase
     }
 
     #[Test]
-    public function it_downloads_all_enabled_languages_with_all_flag()
+    public function it_downloads_new_language_not_in_app_config()
+    {
+        Http::fake([
+            'https://api.poeditor.com/v2/projects/export' => Http::response([
+                'response' => ['status' => 'success', 'message' => 'OK'],
+                'result' => ['url' => 'https://download.poeditor.com/test.po'],
+            ], 200),
+            'https://download.poeditor.com/test.po' => Http::response('PO content', 200),
+        ]);
+
+        config(['po.languages' => [
+            'fr' => ['label' => 'French', 'enabled' => true],
+        ]]);
+
+        // Download Japanese which is not in the config
+        $this->artisan('po:download', ['lang' => ['ja']])->assertSuccessful();
+
+        $this->assertTrue(File::exists($this->tempImportPath.'/ja.po'));
+    }
+
+    #[Test]
+    public function it_downloads_all_languages_from_poeditor_with_all_flag()
+    {
+        Http::fake([
+            'https://api.poeditor.com/v2/languages/list' => Http::response([
+                'response' => ['status' => 'success', 'message' => 'OK'],
+                'result' => [
+                    'languages' => [
+                        ['code' => 'fr', 'name' => 'French'],
+                        ['code' => 'de', 'name' => 'German'],
+                        ['code' => 'es', 'name' => 'Spanish'],
+                    ],
+                ],
+            ], 200),
+            'https://api.poeditor.com/v2/projects/export' => Http::response([
+                'response' => ['status' => 'success', 'message' => 'OK'],
+                'result' => ['url' => 'https://download.poeditor.com/test.po'],
+            ], 200),
+            'https://download.poeditor.com/test.po' => Http::response('PO content', 200),
+        ]);
+
+        config(['po.languages' => [
+            'fr' => ['label' => 'French', 'enabled' => true],
+        ]]);
+
+        $this->artisan('po:download', ['--all' => true])->assertSuccessful();
+
+        // Should download all languages from POEditor, not just enabled ones
+        $this->assertTrue(File::exists($this->tempImportPath.'/fr.po'));
+        $this->assertTrue(File::exists($this->tempImportPath.'/de.po'));
+        $this->assertTrue(File::exists($this->tempImportPath.'/es.po'));
+
+        // Verify languages list API was called
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://api.poeditor.com/v2/languages/list'
+                && $request['api_token'] === 'test-api-token'
+                && $request['id'] === '12345';
+        });
+    }
+
+    #[Test]
+    public function it_downloads_active_languages_with_active_flag()
     {
         Http::fake([
             'https://api.poeditor.com/v2/projects/export' => Http::response([
@@ -122,12 +183,20 @@ class PoeditorDownloadCommandTest extends TestCase
         config(['po.languages' => [
             'fr' => ['label' => 'French', 'enabled' => true],
             'de' => ['label' => 'German', 'enabled' => true],
+            'es' => ['label' => 'Spanish', 'enabled' => false],
         ]]);
 
-        $this->artisan('po:download', ['--all' => true])->assertSuccessful();
+        $this->artisan('po:download', ['--active' => true])->assertSuccessful();
 
+        // Should only download enabled languages from config
         $this->assertTrue(File::exists($this->tempImportPath.'/fr.po'));
         $this->assertTrue(File::exists($this->tempImportPath.'/de.po'));
+        $this->assertFalse(File::exists($this->tempImportPath.'/es.po'));
+
+        // Should NOT call languages list API
+        Http::assertNotSent(function ($request) {
+            return $request->url() === 'https://api.poeditor.com/v2/languages/list';
+        });
     }
 
     #[Test]
@@ -143,7 +212,7 @@ class PoeditorDownloadCommandTest extends TestCase
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po:download', ['--all' => true])->assertFailed();
+        $this->artisan('po:download', ['--active' => true])->assertFailed();
     }
 
     #[Test]
@@ -157,7 +226,7 @@ class PoeditorDownloadCommandTest extends TestCase
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po:download', ['--all' => true])->assertFailed();
+        $this->artisan('po:download', ['--active' => true])->assertFailed();
 
         // File should not be created
         $this->assertFalse(File::exists($this->tempImportPath.'/fr.po'));
@@ -177,7 +246,7 @@ class PoeditorDownloadCommandTest extends TestCase
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po:download', ['--all' => true])->assertFailed();
+        $this->artisan('po:download', ['--active' => true])->assertFailed();
     }
 
     #[Test]
@@ -198,7 +267,7 @@ class PoeditorDownloadCommandTest extends TestCase
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po:download', ['--all' => true])->assertSuccessful();
+        $this->artisan('po:download', ['--active' => true])->assertSuccessful();
 
         // Directory should be created
         $this->assertTrue(File::exists($this->tempImportPath));
@@ -242,8 +311,45 @@ class PoeditorDownloadCommandTest extends TestCase
             'fr' => ['label' => 'French', 'enabled' => true],
         ]]);
 
-        $this->artisan('po:download', ['--all' => true])
+        $this->artisan('po:download', ['--active' => true])
             ->assertSuccessful()
             ->expectsOutputToContain('php artisan po:import');
+    }
+
+    #[Test]
+    public function it_handles_api_error_when_fetching_languages_list()
+    {
+        Http::fake([
+            'https://api.poeditor.com/v2/languages/list' => Http::response([
+                'response' => ['status' => 'fail', 'message' => 'Invalid project ID'],
+            ], 200),
+        ]);
+
+        $this->artisan('po:download', ['--all' => true])
+            ->assertFailed();
+    }
+
+    #[Test]
+    public function it_auto_detects_active_languages_when_not_configured()
+    {
+        config(['po.languages' => []]);
+
+        // Create language directories for auto-detection
+        File::makeDirectory($this->tempLangPath.'/fr', 0755, true);
+        File::makeDirectory($this->tempLangPath.'/de', 0755, true);
+
+        Http::fake([
+            'https://api.poeditor.com/v2/projects/export' => Http::response([
+                'response' => ['status' => 'success', 'message' => 'OK'],
+                'result' => ['url' => 'https://download.poeditor.com/test.po'],
+            ], 200),
+            'https://download.poeditor.com/test.po' => Http::response('PO content', 200),
+        ]);
+
+        $this->artisan('po:download', ['--active' => true])->assertSuccessful();
+
+        // Should download auto-detected languages
+        $this->assertTrue(File::exists($this->tempImportPath.'/fr.po'));
+        $this->assertTrue(File::exists($this->tempImportPath.'/de.po'));
     }
 }

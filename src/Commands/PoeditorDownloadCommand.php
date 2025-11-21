@@ -11,7 +11,9 @@ class PoeditorDownloadCommand extends Command
 {
     protected $signature = 'po:download
         {lang?* : A list of language codes to download }
-        {--all : Download all active languages }';
+        {--all : Download all languages available in POEditor project }
+        {--active : Download all active languages from app config }
+        {--fallback= : Fallback language code to use for untranslated strings }';
 
     protected $description = 'Download PO files from POEditor API to import directory';
 
@@ -41,18 +43,20 @@ class PoeditorDownloadCommand extends Command
         $this->components->info('Downloading translations from POEditor');
         $this->newLine();
 
-        $locales = $this->getLocales();
+        $locales = $this->getLocales($apiToken, $projectId);
 
         if ($locales->isEmpty()) {
-            $this->components->warn('No languages to download. Use --all flag or specify language codes.');
+            $this->components->warn('No languages to download. Use --all, --active flag or specify language codes.');
 
             return Command::FAILURE;
         }
 
         $success = true;
 
+        $fallback = $this->option('fallback');
+
         foreach ($locales as $locale) {
-            $success = $this->downloadLanguage($locale, $apiToken, $projectId) && $success;
+            $success = $this->downloadLanguage($locale, $apiToken, $projectId, $fallback) && $success;
         }
 
         $this->newLine();
@@ -68,18 +72,24 @@ class PoeditorDownloadCommand extends Command
         return Command::FAILURE;
     }
 
-    protected function downloadLanguage(string $locale, string $apiToken, string $projectId): bool
+    protected function downloadLanguage(string $locale, string $apiToken, string $projectId, ?string $fallback = null): bool
     {
         $success = false;
 
-        $this->components->task("Downloading $locale.po", function () use ($locale, $apiToken, $projectId, &$success) {
+        $this->components->task("Downloading $locale.po", function () use ($locale, $apiToken, $projectId, $fallback, &$success) {
             // Step 1: Request export from POEditor
-            $response = Http::asForm()->post('https://api.poeditor.com/v2/projects/export', [
+            $params = [
                 'api_token' => $apiToken,
                 'id' => $projectId,
                 'language' => $locale,
                 'type' => 'po',
-            ]);
+            ];
+
+            if ($fallback) {
+                $params['fallback_language'] = $fallback;
+            }
+
+            $response = Http::asForm()->post('https://api.poeditor.com/v2/projects/export', $params);
 
             if (! $response->successful()) {
                 $this->components->error("Failed to request export for $locale: ".$response->body());
@@ -128,7 +138,28 @@ class PoeditorDownloadCommand extends Command
         return $success;
     }
 
-    protected function getLocales(): Collection
+    protected function getLocales(string $apiToken, string $projectId): Collection
+    {
+        // If specific languages are provided as arguments, use those (no filtering)
+        if ($langs = $this->argument('lang')) {
+            return collect($langs);
+        }
+
+        // If --all flag is set, fetch all languages from POEditor
+        if ($this->option('all')) {
+            return $this->fetchPoeditorLanguages($apiToken, $projectId);
+        }
+
+        // If --active flag is set, return active languages from config
+        if ($this->option('active')) {
+            return $this->getActiveLanguages();
+        }
+
+        // Otherwise, return empty collection (user must specify langs, --all, or --active)
+        return collect();
+    }
+
+    protected function getActiveLanguages(): Collection
     {
         $configuredLanguages = config('po.languages', []);
 
@@ -137,25 +168,38 @@ class PoeditorDownloadCommand extends Command
             $langPath = config('po.paths.lang');
             $directories = File::directories($langPath);
 
-            $languages = collect($directories)
+            return collect($directories)
                 ->map(fn ($dir) => basename($dir));
-        } else {
-            $languages = collect($configuredLanguages)
-                ->where('enabled', true)
-                ->keys();
         }
 
-        // If specific languages are provided as arguments, use those
-        if ($langs = $this->argument('lang')) {
-            return collect($langs)->intersect($languages);
+        return collect($configuredLanguages)
+            ->where('enabled', true)
+            ->keys();
+    }
+
+    protected function fetchPoeditorLanguages(string $apiToken, string $projectId): Collection
+    {
+        $response = Http::asForm()->post('https://api.poeditor.com/v2/languages/list', [
+            'api_token' => $apiToken,
+            'id' => $projectId,
+        ]);
+
+        if (! $response->successful()) {
+            $this->components->error('Failed to fetch languages from POEditor: '.$response->body());
+
+            return collect();
         }
 
-        // If --all flag is set, return all active languages
-        if ($this->option('all')) {
-            return $languages;
+        $data = $response->json();
+
+        if (! isset($data['response']['status']) || $data['response']['status'] !== 'success') {
+            $message = $data['response']['message'] ?? 'Unknown error';
+            $this->components->error("POEditor API error: $message");
+
+            return collect();
         }
 
-        // Otherwise, return empty collection (user must specify langs or --all)
-        return collect();
+        return collect($data['result']['languages'] ?? [])
+            ->pluck('code');
     }
 }
