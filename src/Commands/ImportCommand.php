@@ -73,7 +73,12 @@ class ImportCommand extends Command
                             return;
                         }
 
-                        $export = VarExporter::export($translations->sortKeys()->toArray());
+                        // Convert to nested array if configured
+                        $array = config('po.structure') === 'nested'
+                            ? $this->toNestedArray($translations)
+                            : $translations->sortKeys()->toArray();
+
+                        $export = VarExporter::export($array);
                         $content = <<<"PHP"
                             <?php
 
@@ -140,6 +145,42 @@ class ImportCommand extends Command
         return Str::of($translation)
             ->matchAll('/{(\w+)}/')
             ->reduce(fn ($translation, $placeholder) => str_replace('{'.$placeholder.'}', ':'.$placeholder, $translation), $translation);
+    }
+
+    protected function toNestedArray(Collection $translations): array
+    {
+        $result = [];
+
+        foreach ($translations as $key => $value) {
+            $keys = explode('.', $key);
+            $current = &$result;
+
+            foreach ($keys as $i => $k) {
+                if ($i === count($keys) - 1) {
+                    $current[$k] = $value;
+                } else {
+                    if (! isset($current[$k]) || ! is_array($current[$k])) {
+                        $current[$k] = [];
+                    }
+                    $current = &$current[$k];
+                }
+            }
+        }
+
+        return $this->sortNestedArray($result);
+    }
+
+    protected function sortNestedArray(array $array): array
+    {
+        ksort($array);
+
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $array[$key] = $this->sortNestedArray($value);
+            }
+        }
+
+        return $array;
     }
 
     protected function getLanguageFiles(): Collection

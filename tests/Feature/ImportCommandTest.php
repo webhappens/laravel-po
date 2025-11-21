@@ -400,4 +400,224 @@ PO;
 
         $this->assertTrue(File::exists($this->tempLangPath.'/fr/actions.php'));
     }
+
+    #[Test]
+    public function it_creates_flat_structure_by_default()
+    {
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgctxt "user.name"
+msgid "Name"
+msgstr "Nom"
+
+msgctxt "user.email"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "user.profile.bio"
+msgid "Biography"
+msgstr "Biographie"
+PO;
+
+        $this->createPoFile('fr', $poContent);
+
+        config([
+            'po.languages' => ['fr' => ['label' => 'French', 'enabled' => true]],
+            'po.structure' => 'flat',
+        ]);
+
+        $this->artisan('po:import')->assertSuccessful();
+
+        $translations = $this->getGeneratedTranslations('fr', 'user');
+
+        // Should use dot notation keys
+        $this->assertEquals('Nom', $translations['name']);
+        $this->assertEquals('Email', $translations['email']);
+        $this->assertEquals('Biographie', $translations['profile.bio']);
+    }
+
+    #[Test]
+    public function it_creates_nested_structure_when_configured()
+    {
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgctxt "user.name"
+msgid "Name"
+msgstr "Nom"
+
+msgctxt "user.email"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "user.profile.bio"
+msgid "Biography"
+msgstr "Biographie"
+
+msgctxt "user.profile.avatar"
+msgid "Avatar"
+msgstr "Avatar"
+PO;
+
+        $this->createPoFile('fr', $poContent);
+
+        config([
+            'po.languages' => ['fr' => ['label' => 'French', 'enabled' => true]],
+            'po.structure' => 'nested',
+        ]);
+
+        $this->artisan('po:import')->assertSuccessful();
+
+        $translations = $this->getGeneratedTranslations('fr', 'user');
+
+        // Should create nested arrays
+        $this->assertEquals('Nom', $translations['name']);
+        $this->assertEquals('Email', $translations['email']);
+        $this->assertIsArray($translations['profile']);
+        $this->assertEquals('Biographie', $translations['profile']['bio']);
+        $this->assertEquals('Avatar', $translations['profile']['avatar']);
+    }
+
+    #[Test]
+    public function it_creates_deeply_nested_structure()
+    {
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgctxt "app.settings.user.profile.name"
+msgid "Name"
+msgstr "Nom"
+
+msgctxt "app.settings.user.profile.email"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "app.settings.user.security.password"
+msgid "Password"
+msgstr "Mot de passe"
+PO;
+
+        $this->createPoFile('fr', $poContent);
+
+        config([
+            'po.languages' => ['fr' => ['label' => 'French', 'enabled' => true]],
+            'po.structure' => 'nested',
+        ]);
+
+        $this->artisan('po:import')->assertSuccessful();
+
+        $translations = $this->getGeneratedTranslations('fr', 'app');
+
+        // Should create deeply nested arrays
+        $this->assertIsArray($translations['settings']);
+        $this->assertIsArray($translations['settings']['user']);
+        $this->assertIsArray($translations['settings']['user']['profile']);
+        $this->assertIsArray($translations['settings']['user']['security']);
+        $this->assertEquals('Nom', $translations['settings']['user']['profile']['name']);
+        $this->assertEquals('Email', $translations['settings']['user']['profile']['email']);
+        $this->assertEquals('Mot de passe', $translations['settings']['user']['security']['password']);
+    }
+
+    #[Test]
+    public function it_sorts_nested_arrays_alphabetically()
+    {
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgctxt "user.zebra"
+msgid "Zebra"
+msgstr "Zèbre"
+
+msgctxt "user.apple"
+msgid "Apple"
+msgstr "Pomme"
+
+msgctxt "user.middle.zoo"
+msgid "Zoo"
+msgstr "Zoo"
+
+msgctxt "user.middle.ant"
+msgid "Ant"
+msgstr "Fourmi"
+PO;
+
+        $this->createPoFile('fr', $poContent);
+
+        config([
+            'po.languages' => ['fr' => ['label' => 'French', 'enabled' => true]],
+            'po.structure' => 'nested',
+        ]);
+
+        $this->artisan('po:import')->assertSuccessful();
+
+        $translations = $this->getGeneratedTranslations('fr', 'user');
+
+        // Check keys are sorted alphabetically
+        $keys = array_keys($translations);
+        $this->assertEquals(['apple', 'middle', 'zebra'], $keys);
+
+        // Check nested keys are also sorted
+        $nestedKeys = array_keys($translations['middle']);
+        $this->assertEquals(['ant', 'zoo'], $nestedKeys);
+    }
+
+    #[Test]
+    public function it_merges_nested_structure_with_existing_translations()
+    {
+        // Create existing nested translation file
+        $this->createTranslationFile('fr', 'user', [
+            'name' => 'Nom',
+            'profile' => [
+                'bio' => 'Biographie existante',
+                'location' => 'Localisation',
+            ],
+        ]);
+
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgctxt "user.email"
+msgid "Email"
+msgstr "Email"
+
+msgctxt "user.profile.bio"
+msgid "Biography"
+msgstr "Biographie mise à jour"
+
+msgctxt "user.profile.website"
+msgid "Website"
+msgstr "Site web"
+PO;
+
+        $this->createPoFile('fr', $poContent);
+
+        config([
+            'po.languages' => ['fr' => ['label' => 'French', 'enabled' => true]],
+            'po.structure' => 'nested',
+        ]);
+
+        $this->artisan('po:import')->assertSuccessful();
+
+        $translations = $this->getGeneratedTranslations('fr', 'user');
+
+        // Should preserve existing translations
+        $this->assertEquals('Nom', $translations['name']);
+        $this->assertEquals('Localisation', $translations['profile']['location']);
+
+        // Should update with new translations
+        $this->assertEquals('Email', $translations['email']);
+        $this->assertEquals('Biographie mise à jour', $translations['profile']['bio']);
+        $this->assertEquals('Site web', $translations['profile']['website']);
+    }
 }

@@ -43,6 +43,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Array Structure
+    |--------------------------------------------------------------------------
+    |
+    | Configure how translations are structured in your PHP files when importing.
+    |
+    | 'flat' - Uses dot notation keys: ['user.name' => 'Name', 'user.email' => 'Email']
+    | 'nested' - Creates nested arrays: ['user' => ['name' => 'Name', 'email' => 'Email']]
+    |
+    */
+
+    'structure' => env('PO_STRUCTURE', 'flat'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Language Configuration
     |--------------------------------------------------------------------------
     |
