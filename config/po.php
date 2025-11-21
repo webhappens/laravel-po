@@ -80,24 +80,4 @@ return [
         'project_id' => env('POEDITOR_PROJECT_ID'),
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Cache Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Optional callback to clear application caches after importing translations.
-    | This is useful if your application caches compiled translation catalogues.
-    |
-    | Example:
-    | 'clear_callback' => function ($locale) {
-    |     Cache::forget("catalogue:{$locale}");
-    |     File::delete(storage_path("app/cache/catalogue:{$locale}"));
-    | },
-    |
-    */
-
-    'cache' => [
-        'clear_callback' => null,
-    ],
-
 ];

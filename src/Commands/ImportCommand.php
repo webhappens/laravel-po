@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\VarExporter\VarExporter;
+use WebHappens\LaravelPo\Events\TranslationsImported;
 
 class ImportCommand extends Command
 {
@@ -29,17 +30,19 @@ class ImportCommand extends Command
             $language = Language::getById($locale);
             $this->components->info('Loading translations for '.$language->name.' ['.$locale.']');
 
+            $importedGroups = [];
+
             collect($translations)
                 ->lazy()
                 ->reject([$this, 'isFuzzy'])
                 ->filter([$this, 'matchesPattern'])
                 ->groupBy(fn ($translation) => Str::before($translation->getContext(), '.'))
-                ->each(function ($translations, $group) use ($locale) {
+                ->each(function ($translations, $group) use ($locale, &$importedGroups) {
                     $langPath = config('po.paths.lang');
                     $groupFile = $langPath.'/'.$locale.DIRECTORY_SEPARATOR."$group.php";
                     $nonMatchingTranslations = collect();
 
-                    $this->components->task('Generating file: '.$groupFile, function () use ($locale, $group, $groupFile, $translations, $nonMatchingTranslations) {
+                    $this->components->task('Generating file: '.$groupFile, function () use ($locale, $group, $groupFile, $translations, $nonMatchingTranslations, &$importedGroups) {
                         if (app()->getLocale() == $locale) {
                             $translations
                                 ->filter(fn ($translation) => $translation->getOriginal() !== $translation->getTranslation())
@@ -52,6 +55,9 @@ class ImportCommand extends Command
                             ->filter()
                             ->map([$this, 'formatPlaceholdersFromPerlBrace']);
 
+                        // Track imported keys for event
+                        $importedGroups[$group] = $translations->keys()->toArray();
+
                         if (! $this->option('replace')) {
                             // Load existing translations by reading the file directly
                             if (File::exists($groupFile)) {
@@ -62,6 +68,7 @@ class ImportCommand extends Command
 
                         if ($translations->isEmpty()) {
                             File::delete($groupFile);
+                            unset($importedGroups[$group]);
 
                             return;
                         }
@@ -97,9 +104,9 @@ class ImportCommand extends Command
                     }
                 });
 
-            // Call optional cache clearing callback if configured
-            if ($callback = config('po.cache.clear_callback')) {
-                $callback($locale);
+            // Dispatch event with imported translations
+            if (! empty($importedGroups)) {
+                event(new TranslationsImported($locale, $importedGroups));
             }
 
             $this->newLine();
