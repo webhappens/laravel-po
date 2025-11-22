@@ -620,4 +620,131 @@ PO;
         $this->assertEquals('Biographie mise à jour', $translations['profile']['bio']);
         $this->assertEquals('Site web', $translations['profile']['website']);
     }
+
+    #[Test]
+    public function it_clears_import_directory_after_successful_import_with_clear_and_force()
+    {
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgctxt "actions.save"
+msgid "Save"
+msgstr "Enregistrer"
+PO;
+
+        $this->createPoFile('fr', $poContent);
+        $this->createPoFile('de', $poContent); // Extra file
+
+        config(['po.languages' => [
+            'fr' => ['label' => 'French', 'enabled' => true],
+        ]]);
+
+        // Both files should exist before import
+        $this->assertTrue(File::exists($this->tempImportPath.'/fr.po'));
+        $this->assertTrue(File::exists($this->tempImportPath.'/de.po'));
+
+        $this->artisan('po:import', ['--clear' => true, '--force' => true])->assertSuccessful();
+
+        // Import directory should be cleared after successful import
+        $this->assertFalse(File::exists($this->tempImportPath.'/fr.po'));
+        $this->assertFalse(File::exists($this->tempImportPath.'/de.po'));
+
+        // But translations should be imported
+        $this->assertTrue(File::exists($this->tempLangPath.'/fr/actions.php'));
+    }
+
+    #[Test]
+    public function it_prompts_for_confirmation_when_clearing_import_without_force()
+    {
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgctxt "actions.save"
+msgid "Save"
+msgstr "Enregistrer"
+PO;
+
+        $this->createPoFile('fr', $poContent);
+
+        config(['po.languages' => [
+            'fr' => ['label' => 'French', 'enabled' => true],
+        ]]);
+
+        // Simulate user declining the confirmation
+        $this->artisan('po:import', ['--clear' => true])
+            ->expectsConfirmation('Do you want to continue?', 'no')
+            ->expectsOutputToContain('Operation cancelled.')
+            ->assertSuccessful(); // Import still succeeds, just doesn't clear
+
+        // File should still exist since user declined
+        $this->assertTrue(File::exists($this->tempImportPath.'/fr.po'));
+    }
+
+    #[Test]
+    public function it_clears_import_directory_when_user_confirms()
+    {
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgctxt "actions.save"
+msgid "Save"
+msgstr "Enregistrer"
+PO;
+
+        $this->createPoFile('fr', $poContent);
+
+        config(['po.languages' => [
+            'fr' => ['label' => 'French', 'enabled' => true],
+        ]]);
+
+        // Simulate user accepting the confirmation
+        $this->artisan('po:import', ['--clear' => true])
+            ->expectsConfirmation('Do you want to continue?', 'yes')
+            ->assertSuccessful();
+
+        // File should be deleted since user confirmed
+        $this->assertFalse(File::exists($this->tempImportPath.'/fr.po'));
+
+        // Translations should be imported
+        $this->assertTrue(File::exists($this->tempLangPath.'/fr/actions.php'));
+    }
+
+    #[Test]
+    public function it_handles_clear_flag_when_import_directory_is_already_empty()
+    {
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: fr\n"
+
+msgctxt "actions.save"
+msgid "Save"
+msgstr "Enregistrer"
+PO;
+
+        $this->createPoFile('fr', $poContent);
+
+        config(['po.languages' => [
+            'fr' => ['label' => 'French', 'enabled' => true],
+        ]]);
+
+        // First import with clear to empty the directory
+        $this->artisan('po:import', ['--clear' => true, '--force' => true])->assertSuccessful();
+
+        // Recreate po file for second import
+        $this->createPoFile('fr', $poContent);
+
+        // Clear the directory manually to test empty state
+        File::delete($this->tempImportPath.'/fr.po');
+
+        $this->artisan('po:import', ['--clear' => true, '--force' => true])
+            ->expectsOutputToContain('The import directory is already empty.')
+            ->assertSuccessful();
+    }
 }

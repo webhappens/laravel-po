@@ -13,11 +13,15 @@ use Illuminate\Support\Str;
 use Illuminate\Translation\Translator;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
+use WebHappens\LaravelPo\Commands\Concerns\ClearsDirectories;
 
 class ExportCommand extends Command
 {
+    use ClearsDirectories;
     protected $signature = 'po:export
-        {lang?* : Provide the language codes for generation, or leave blank for default language }';
+        {lang?* : Provide the language codes for generation, or leave blank for default language }
+        {--clear : Clear the export directory before generating new files }
+        {--force : Force the operation without confirmation }';
 
     protected $description = 'Generate PO files for language translation';
 
@@ -40,6 +44,13 @@ class ExportCommand extends Command
         $exportPath = config('po.paths.export');
         if (! File::exists($exportPath)) {
             File::makeDirectory($exportPath, 0755, true);
+        }
+
+        // Handle --clear option
+        if ($this->option('clear')) {
+            if (! $this->clearDirectory($exportPath, 'export')) {
+                return Command::FAILURE;
+            }
         }
 
         foreach ($this->getLocales() as $locale => $language) {

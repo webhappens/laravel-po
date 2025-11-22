@@ -164,4 +164,86 @@ class ExportCommandTest extends TestCase
         $this->assertStringNotContainsString('messages.empty', $content);
         $this->assertStringNotContainsString('messages.null_value', $content);
     }
+
+    #[Test]
+    public function it_clears_export_directory_with_clear_flag_and_force()
+    {
+        $this->createTranslationFile('en', 'messages', [
+            'hello' => 'Hello',
+        ]);
+
+        // Create some existing files in export directory
+        File::put($this->tempExportPath.'/old-file.po', 'old content');
+        File::put($this->tempExportPath.'/another-old.po', 'old content');
+
+        $this->assertTrue(File::exists($this->tempExportPath.'/old-file.po'));
+        $this->assertTrue(File::exists($this->tempExportPath.'/another-old.po'));
+
+        $this->artisan('po:export', ['--clear' => true, '--force' => true])->assertSuccessful();
+
+        // Old files should be deleted
+        $this->assertFalse(File::exists($this->tempExportPath.'/old-file.po'));
+        $this->assertFalse(File::exists($this->tempExportPath.'/another-old.po'));
+
+        // New file should be created
+        $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
+    }
+
+    #[Test]
+    public function it_prompts_for_confirmation_when_clearing_without_force()
+    {
+        $this->createTranslationFile('en', 'messages', [
+            'hello' => 'Hello',
+        ]);
+
+        File::put($this->tempExportPath.'/old-file.po', 'old content');
+
+        // Simulate user declining the confirmation
+        $this->artisan('po:export', ['--clear' => true])
+            ->expectsConfirmation('Do you want to continue?', 'no')
+            ->expectsOutputToContain('Operation cancelled.')
+            ->assertFailed();
+
+        // Old file should still exist
+        $this->assertTrue(File::exists($this->tempExportPath.'/old-file.po'));
+    }
+
+    #[Test]
+    public function it_proceeds_when_user_confirms_clear()
+    {
+        $this->createTranslationFile('en', 'messages', [
+            'hello' => 'Hello',
+        ]);
+
+        File::put($this->tempExportPath.'/old-file.po', 'old content');
+
+        // Simulate user accepting the confirmation
+        $this->artisan('po:export', ['--clear' => true])
+            ->expectsConfirmation('Do you want to continue?', 'yes')
+            ->assertSuccessful();
+
+        // Old file should be deleted
+        $this->assertFalse(File::exists($this->tempExportPath.'/old-file.po'));
+
+        // New file should be created
+        $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
+    }
+
+    #[Test]
+    public function it_handles_clear_flag_when_directory_is_already_empty()
+    {
+        $this->createTranslationFile('en', 'messages', [
+            'hello' => 'Hello',
+        ]);
+
+        // Export directory is already empty
+        $this->assertEmpty(File::files($this->tempExportPath));
+
+        $this->artisan('po:export', ['--clear' => true, '--force' => true])
+            ->expectsOutputToContain('The export directory is already empty.')
+            ->assertSuccessful();
+
+        // New file should be created
+        $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
+    }
 }

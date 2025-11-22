@@ -12,15 +12,19 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\VarExporter\VarExporter;
+use WebHappens\LaravelPo\Commands\Concerns\ClearsDirectories;
 use WebHappens\LaravelPo\Events\TranslationsImported;
 
 class ImportCommand extends Command
 {
+    use ClearsDirectories;
     protected $signature = 'po:import
         {lang?* : Provide the language codes for generation, or leave blank for all }
         {--fuzzy : Include fuzzy translations }
         {--only=* : Limit keys to only those that match a specific pattern }
-        {--replace : Replace existing files }';
+        {--replace : Replace existing files }
+        {--clear : Clear the import directory after successful import }
+        {--force : Force the operation without confirmation }';
 
     protected $description = 'Load PO files to update translations';
 
@@ -115,6 +119,12 @@ class ImportCommand extends Command
             }
 
             $this->newLine();
+        }
+
+        // Handle --clear option
+        if ($this->option('clear')) {
+            $importPath = config('po.paths.import');
+            $this->clearDirectory($importPath, 'import');
         }
 
         return Command::SUCCESS;
