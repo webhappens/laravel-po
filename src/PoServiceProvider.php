@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use WebHappens\LaravelPo\Commands\ExportCommand;
 use WebHappens\LaravelPo\Commands\ImportCommand;
 use WebHappens\LaravelPo\Commands\PoeditorDownloadCommand;
+use WebHappens\LaravelPo\Commands\SortCommand;
 
 class PoServiceProvider extends ServiceProvider
 {
@@ -34,6 +35,7 @@ class PoServiceProvider extends ServiceProvider
                 ExportCommand::class,
                 ImportCommand::class,
                 PoeditorDownloadCommand::class,
+                SortCommand::class,
             ]);
         }
     }
