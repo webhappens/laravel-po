@@ -11,13 +11,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Translation\Translator;
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
 use WebHappens\LaravelPo\Commands\Concerns\ClearsDirectories;
+use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 
 class ExportCommand extends Command
 {
-    use ClearsDirectories;
+    use ClearsDirectories, ManagesTranslations;
     protected $signature = 'po:export
         {lang?* : Provide the language codes for generation, or leave blank for default language }
         {--clear : Clear the export directory before generating new files }
@@ -71,8 +70,8 @@ class ExportCommand extends Command
     {
         $pot = Translations::create(language: $locale);
 
-        $this->getLangFilesForLocale($locale)
-            ->map(fn ($file, $group) => include $file->getPathname())
+        $this->getTranslationGroups($locale)
+            ->mapWithKeys(fn ($group) => [$group => $this->readTranslationFile($locale, $group)])
             ->dot()
             ->reject(fn ($text) => ! $text)
             ->filter([$this, 'shouldIncludeTranslation'])
@@ -144,18 +143,4 @@ class ExportCommand extends Command
             ->only($this->argument('lang') ?: app()->getLocale());
     }
 
-    protected function getLangFilesForLocale($locale = null): Collection
-    {
-        return collect(Finder::create()->files()->name('*.php')->in($this->getLangPathForLocale($locale)))
-            ->keyBy(fn (SplFileInfo $file) => $file->getBasename('.'.$file->getExtension()));
-    }
-
-    protected function getLangPathForLocale($locale = null)
-    {
-        if ($locale === null) {
-            $locale = app()->getLocale();
-        }
-
-        return config('po.paths.lang').'/'.$locale;
-    }
 }

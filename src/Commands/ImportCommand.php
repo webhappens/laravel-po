@@ -13,11 +13,12 @@ use Illuminate\Support\Str;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\VarExporter\VarExporter;
 use WebHappens\LaravelPo\Commands\Concerns\ClearsDirectories;
+use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 use WebHappens\LaravelPo\Events\TranslationsImported;
 
 class ImportCommand extends Command
 {
-    use ClearsDirectories;
+    use ClearsDirectories, ManagesTranslations;
     protected $signature = 'po:import
         {lang?* : Provide the language codes for generation, or leave blank for all }
         {--fuzzy : Include fuzzy translations }
@@ -63,18 +64,11 @@ class ImportCommand extends Command
                         $importedGroups[$group] = $translations->keys()->toArray();
 
                         if (! $this->option('replace')) {
-                            // Load existing translations by reading the file directly
-                            if (File::exists($groupFile)) {
-                                $existing = include $groupFile;
+                            // Load existing translations
+                            $existing = $this->readTranslationFile($locale, $group);
+                            if (! empty($existing)) {
                                 $translations = collect($existing)->merge($translations);
                             }
-                        }
-
-                        if ($translations->isEmpty()) {
-                            File::delete($groupFile);
-                            unset($importedGroups[$group]);
-
-                            return;
                         }
 
                         // Convert to nested array if configured
@@ -82,21 +76,11 @@ class ImportCommand extends Command
                             ? $this->toNestedArray($translations)
                             : $translations->sortKeys()->toArray();
 
-                        $export = VarExporter::export($array);
-                        $content = <<<"PHP"
-                            <?php
-
-                            return $export;
-
-                            PHP;
-
-                        // Ensure directory exists
-                        $directory = dirname($groupFile);
-                        if (! File::exists($directory)) {
-                            File::makeDirectory($directory, 0755, true);
+                        if (empty($array)) {
+                            unset($importedGroups[$group]);
                         }
 
-                        file_put_contents($groupFile, $content);
+                        $this->writeTranslationFile($locale, $group, $array);
                     });
 
                     if ($nonMatchingTranslations->isNotEmpty()) {
@@ -155,42 +139,6 @@ class ImportCommand extends Command
         return Str::of($translation)
             ->matchAll('/{(\w+)}/')
             ->reduce(fn ($translation, $placeholder) => str_replace('{'.$placeholder.'}', ':'.$placeholder, $translation), $translation);
-    }
-
-    protected function toNestedArray(Collection $translations): array
-    {
-        $result = [];
-
-        foreach ($translations as $key => $value) {
-            $keys = explode('.', $key);
-            $current = &$result;
-
-            foreach ($keys as $i => $k) {
-                if ($i === count($keys) - 1) {
-                    $current[$k] = $value;
-                } else {
-                    if (! isset($current[$k]) || ! is_array($current[$k])) {
-                        $current[$k] = [];
-                    }
-                    $current = &$current[$k];
-                }
-            }
-        }
-
-        return $this->sortNestedArray($result);
-    }
-
-    protected function sortNestedArray(array $array): array
-    {
-        ksort($array);
-
-        foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                $array[$key] = $this->sortNestedArray($value);
-            }
-        }
-
-        return $array;
     }
 
     protected function getLanguageFiles(): Collection
