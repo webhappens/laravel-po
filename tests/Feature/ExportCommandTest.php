@@ -246,4 +246,52 @@ class ExportCommandTest extends TestCase
         // New file should be created
         $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
     }
+
+    #[Test]
+    public function it_exports_all_enabled_languages_with_all_flag()
+    {
+        // Create translations for multiple languages
+        $this->createTranslationFile('en', 'actions', ['save' => 'Save']);
+        $this->createTranslationFile('fr', 'actions', ['save' => 'Enregistrer']);
+        $this->createTranslationFile('de', 'actions', ['save' => 'Speichern']);
+
+        // Configure languages
+        config(['po.languages' => [
+            'en' => ['label' => 'English', 'enabled' => true],
+            'fr' => ['label' => 'French', 'enabled' => true],
+            'de' => ['label' => 'German', 'enabled' => true],
+        ]]);
+
+        // Export all languages
+        $this->artisan('po:export', ['--all' => true])->assertSuccessful();
+
+        // All PO files should be created
+        $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
+        $this->assertTrue(File::exists($this->tempExportPath.'/fr.po'));
+        $this->assertTrue(File::exists($this->tempExportPath.'/de.po'));
+    }
+
+    #[Test]
+    public function it_only_exports_enabled_languages_with_all_flag()
+    {
+        // Create translations for multiple languages
+        $this->createTranslationFile('en', 'actions', ['save' => 'Save']);
+        $this->createTranslationFile('fr', 'actions', ['save' => 'Enregistrer']);
+        $this->createTranslationFile('de', 'actions', ['save' => 'Speichern']);
+
+        // Configure languages with one disabled
+        config(['po.languages' => [
+            'en' => ['label' => 'English', 'enabled' => true],
+            'fr' => ['label' => 'French', 'enabled' => true],
+            'de' => ['label' => 'German', 'enabled' => false],
+        ]]);
+
+        // Export all enabled languages
+        $this->artisan('po:export', ['--all' => true])->assertSuccessful();
+
+        // Only enabled languages should be exported
+        $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
+        $this->assertTrue(File::exists($this->tempExportPath.'/fr.po'));
+        $this->assertFalse(File::exists($this->tempExportPath.'/de.po'));
+    }
 }

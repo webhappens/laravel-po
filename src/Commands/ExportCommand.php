@@ -19,6 +19,7 @@ class ExportCommand extends Command
     use ClearsDirectories, ManagesTranslations;
     protected $signature = 'po:export
         {lang?* : Provide the language codes for generation, or leave blank for default language }
+        {--all : Export all enabled languages }
         {--clear : Clear the export directory before generating new files }
         {--force : Force the operation without confirmation }';
 
@@ -137,10 +138,15 @@ class ExportCommand extends Command
                 ->toArray();
         }
 
-        return collect($configuredLanguages)
+        $locales = collect($configuredLanguages)
             ->where('enabled', true)
-            ->map(fn ($language, $locale) => Language::getById($locale))
-            ->only($this->argument('lang') ?: app()->getLocale());
+            ->map(fn ($language, $locale) => Language::getById($locale));
+
+        if ($this->option('all')) {
+            return $locales;
+        }
+
+        return $locales->only($this->argument('lang') ?: app()->getLocale());
     }
 
 }
