@@ -131,6 +131,20 @@ lang/export/
 └── es.po
 ```
 
+#### Export Options
+
+**Export all enabled languages:**
+
+```bash
+php artisan po:export --all
+```
+
+**Clear export directory before generating:**
+
+```bash
+php artisan po:export --clear
+```
+
 ### Import PO Files to Laravel
 
 Import all available PO files:
