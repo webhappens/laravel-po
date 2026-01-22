@@ -140,7 +140,8 @@ class ExportCommand extends Command
 
         $locales = collect($configuredLanguages)
             ->where('enabled', true)
-            ->map(fn ($language, $locale) => Language::getById($locale));
+            ->map(fn ($language, $locale) => Language::getById($locale))
+            ->filter();
 
         if ($this->option('all')) {
             return $locales;

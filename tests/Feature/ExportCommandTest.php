@@ -134,14 +134,22 @@ class ExportCommandTest extends TestCase
         config(['po.languages' => []]);
 
         // Create translation directories
+        // Note: export/ and import/ directories already exist from setUp()
         $this->createTranslationFile('en', 'actions', ['save' => 'Save']);
         $this->createTranslationFile('fr', 'actions', ['save' => 'Enregistrer']);
         $this->createTranslationFile('de', 'actions', ['save' => 'Speichern']);
 
-        // Export should work with all detected languages
-        $this->artisan('po:export', ['lang' => ['fr']])->assertSuccessful();
+        // Export all auto-detected languages
+        $this->artisan('po:export', ['--all' => true])->assertSuccessful();
 
+        // Should detect valid locale directories
+        $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
         $this->assertTrue(File::exists($this->tempExportPath.'/fr.po'));
+        $this->assertTrue(File::exists($this->tempExportPath.'/de.po'));
+
+        // Should NOT detect export/import directories as locales
+        $this->assertFalse(File::exists($this->tempExportPath.'/export.po'));
+        $this->assertFalse(File::exists($this->tempExportPath.'/import.po'));
     }
 
     #[Test]
