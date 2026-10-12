@@ -76,8 +76,8 @@ class ExportCommand extends Command
             ->mapWithKeys(fn ($group) => [$group => $this->readTranslationFile($locale, $group)])
             ->dot()
             ->reject(fn ($text) => ! $text)
-            ->filter([$this, 'shouldIncludeTranslation'])
-            ->map([$this, 'formatPlaceholdersAsPerlBrace'])
+            ->filter($this->shouldIncludeTranslation(...))
+            ->map($this->formatPlaceholdersAsPerlBrace(...))
             ->map(fn ($original, $key) => Translation::create($key, $original))
             ->each(fn ($translation) => $pot->add($translation));
 

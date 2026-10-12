@@ -39,8 +39,8 @@ class ImportCommand extends Command
 
             collect($translations)
                 ->lazy()
-                ->reject([$this, 'isFuzzy'])
-                ->filter([$this, 'matchesPattern'])
+                ->reject($this->isFuzzy(...))
+                ->filter($this->matchesPattern(...))
                 ->groupBy(fn ($translation) => Str::before($translation->getContext(), '.'))
                 ->each(function ($translations, $group) use ($locale, &$importedGroups) {
                     $langPath = config('po.paths.lang');
@@ -58,7 +58,7 @@ class ImportCommand extends Command
                             ->keyBy(fn ($translation) => Str::after($translation->getContext(), '.'))
                             ->map(fn ($translation) => $translation->getTranslation())
                             ->filter()
-                            ->map([$this, 'formatPlaceholdersFromPerlBrace']);
+                            ->map($this->formatPlaceholdersFromPerlBrace(...));
 
                         // Track imported keys for event
                         $importedGroups[$group] = $translations->keys()->toArray();
