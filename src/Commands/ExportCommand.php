@@ -114,7 +114,7 @@ class ExportCommand extends Command
         $exclude = (array) config('po.excluded_groups');
 
         return ! collect($exclude)
-            ->first(fn ($pattern) => str($key)->is($pattern.'*'));
+            ->contains(fn ($pattern) => str($key)->is([$pattern, $pattern.'.*']));
     }
 
     public function formatPlaceholdersAsPerlBrace(string $translation): string

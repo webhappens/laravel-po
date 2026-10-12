@@ -82,6 +82,21 @@ class ExportCommandTest extends TestCase
     }
 
     #[Test]
+    public function it_does_not_exclude_groups_that_share_a_prefix_with_an_excluded_group()
+    {
+        config(['po.excluded_groups' => ['auth']]);
+
+        $this->createTranslationFile('en', 'auth', ['failed' => 'These credentials do not match']);
+        $this->createTranslationFile('en', 'authors', ['title' => 'Our authors']);
+
+        $this->artisan('po:export')->assertSuccessful();
+
+        $content = $this->getExportedPoFile('en');
+        $this->assertStringNotContainsString('auth.failed', $content);
+        $this->assertStringContainsString('authors.title', $content);
+    }
+
+    #[Test]
     public function it_handles_nested_translations()
     {
         $this->createTranslationFile('en', 'messages', [
