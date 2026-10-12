@@ -8,7 +8,6 @@ use Gettext\Translation;
 use Gettext\Translations;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Symfony\Component\Finder\Finder;
 use WebHappens\LaravelPo\Commands\Concerns\ClearsDirectories;
@@ -147,25 +146,11 @@ class ImportCommand extends Command
     protected function getLanguageFiles(): Collection
     {
         $importPath = config('po.paths.import');
-        $configuredLanguages = (array) config('po.languages');
-
-        // Auto-detect enabled languages if not configured
-        if (empty($configuredLanguages)) {
-            $langPath = config('po.paths.lang');
-            $directories = File::directories($langPath);
-
-            $enabledLocales = collect($directories)
-                ->map(fn ($dir) => basename($dir));
-        } else {
-            $enabledLocales = collect($configuredLanguages)
-                ->where('enabled', true)
-                ->keys();
-        }
 
         return collect(Finder::create()->files()->name('*.po')->in($importPath))
             ->map(fn ($file) => (new PoLoader)->loadFile($file->getRealPath()))
             ->keyBy(fn (Translations $translations) => $translations->getLanguage())
-            ->only($enabledLocales)
+            ->only($this->getEnabledLocales())
             ->when($this->argument('lang'), fn ($locales, $only) => $locales->only($only));
     }
 }

@@ -118,6 +118,25 @@ trait ManagesTranslations
     }
 
     /**
+     * Get the enabled locales from config, or auto-detect them from the lang directory
+     *
+     * @return Collection<int, string>
+     */
+    protected function getEnabledLocales(): Collection
+    {
+        $configuredLanguages = (array) config('po.languages');
+
+        if (empty($configuredLanguages)) {
+            return collect(File::directories(config('po.paths.lang')))
+                ->map(fn ($dir) => basename($dir));
+        }
+
+        return collect($configuredLanguages)
+            ->where('enabled', true)
+            ->keys();
+    }
+
+    /**
      * Get all translation files for a given locale
      *
      * @return Collection<int, string>

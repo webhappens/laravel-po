@@ -129,25 +129,8 @@ class ExportCommand extends Command
      */
     protected function getLocales(): Collection
     {
-        $configuredLanguages = (array) config('po.languages');
-
-        // Auto-detect languages from directories if not configured
-        if (empty($configuredLanguages)) {
-            $langPath = config('po.paths.lang');
-            $directories = File::directories($langPath);
-
-            $configuredLanguages = collect($directories)
-                ->mapWithKeys(function ($dir) {
-                    $locale = basename($dir);
-
-                    return [$locale => ['label' => $locale, 'enabled' => true]];
-                })
-                ->toArray();
-        }
-
-        $locales = collect($configuredLanguages)
-            ->where('enabled', true)
-            ->map(fn ($language, $locale) => Language::getById($locale))
+        $locales = $this->getEnabledLocales()
+            ->mapWithKeys(fn ($locale) => [$locale => Language::getById($locale)])
             ->filter();
 
         if ($this->option('all')) {

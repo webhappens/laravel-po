@@ -5,7 +5,6 @@ namespace WebHappens\LaravelPo\Commands;
 use Gettext\Languages\Language;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\File;
 use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 
 class SortCommand extends Command
@@ -63,25 +62,10 @@ class SortCommand extends Command
      */
     protected function getLocales(): Collection
     {
-        $langPath = config('po.paths.lang');
-        $configuredLanguages = (array) config('po.languages');
-
-        // Get enabled locales from config or auto-detect
-        if (empty($configuredLanguages)) {
-            $directories = File::directories($langPath);
-            $enabledLocales = collect($directories)
-                ->map(fn ($dir) => basename($dir));
-        } else {
-            $enabledLocales = collect($configuredLanguages)
-                ->where('enabled', true)
-                ->keys();
-        }
-
-        // Filter by argument if provided
         if ($langs = $this->argument('lang')) {
             return collect($langs);
         }
 
-        return $enabledLocales;
+        return $this->getEnabledLocales();
     }
 }
