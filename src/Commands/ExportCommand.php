@@ -7,6 +7,7 @@ use Gettext\Languages\Language;
 use Gettext\Translation;
 use Gettext\Translations;
 use Illuminate\Console\Command;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -72,9 +73,10 @@ class ExportCommand extends Command
     {
         $pot = Translations::create(language: $locale);
 
-        $this->getTranslationGroups($locale)
-            ->mapWithKeys(fn ($group) => [$group => $this->readTranslationFile($locale, $group)])
-            ->dot()
+        $groups = $this->getTranslationGroups($locale)
+            ->mapWithKeys(fn ($group) => [$group => $this->readTranslationFile($locale, $group)]);
+
+        collect(Arr::dot($groups))
             ->reject(fn ($text) => ! $text)
             ->filter($this->shouldIncludeTranslation(...))
             ->map($this->formatPlaceholdersAsPerlBrace(...))
