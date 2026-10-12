@@ -161,7 +161,7 @@ class PoeditorDownloadCommand extends Command
 
     protected function getActiveLanguages(): Collection
     {
-        $configuredLanguages = config('po.languages', []);
+        $configuredLanguages = (array) config('po.languages');
 
         // Auto-detect enabled languages if not configured
         if (empty($configuredLanguages)) {
@@ -199,7 +199,7 @@ class PoeditorDownloadCommand extends Command
             return collect();
         }
 
-        return collect($data['result']['languages'] ?? [])
+        return $response->collect('result.languages')
             ->pluck('code');
     }
 }

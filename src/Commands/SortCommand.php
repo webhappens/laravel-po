@@ -61,7 +61,7 @@ class SortCommand extends Command
     protected function getLocales(): Collection
     {
         $langPath = config('po.paths.lang');
-        $configuredLanguages = config('po.languages', []);
+        $configuredLanguages = (array) config('po.languages');
 
         // Get enabled locales from config or auto-detect
         if (empty($configuredLanguages)) {

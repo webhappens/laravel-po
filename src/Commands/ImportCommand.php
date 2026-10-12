@@ -37,7 +37,7 @@ class ImportCommand extends Command
 
             $importedGroups = [];
 
-            collect($translations)
+            collect($translations->getTranslations())
                 ->lazy()
                 ->reject($this->isFuzzy(...))
                 ->filter($this->matchesPattern(...))
@@ -144,7 +144,7 @@ class ImportCommand extends Command
     protected function getLanguageFiles(): Collection
     {
         $importPath = config('po.paths.import');
-        $configuredLanguages = config('po.languages', []);
+        $configuredLanguages = (array) config('po.languages');
 
         // Auto-detect enabled languages if not configured
         if (empty($configuredLanguages)) {

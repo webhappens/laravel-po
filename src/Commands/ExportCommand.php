@@ -111,7 +111,7 @@ class ExportCommand extends Command
 
     public function shouldIncludeTranslation(string $translation, string $key): bool
     {
-        $exclude = config('po.excluded_groups', []);
+        $exclude = (array) config('po.excluded_groups');
 
         return ! collect($exclude)
             ->first(fn ($pattern) => str($key)->is($pattern.'*'));
@@ -126,7 +126,7 @@ class ExportCommand extends Command
 
     protected function getLocales(): Collection
     {
-        $configuredLanguages = config('po.languages', []);
+        $configuredLanguages = (array) config('po.languages');
 
         // Auto-detect languages from directories if not configured
         if (empty($configuredLanguages)) {
