@@ -2,6 +2,7 @@
 
 namespace WebHappens\LaravelPo\Commands\Concerns;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\VarExporter\VarExporter;
@@ -81,19 +82,7 @@ trait ManagesTranslations
         $result = [];
 
         foreach ($translations as $key => $value) {
-            $keys = explode('.', $key);
-            $current = &$result;
-
-            foreach ($keys as $i => $k) {
-                if ($i === count($keys) - 1) {
-                    $current[$k] = $value;
-                } else {
-                    if (! isset($current[$k]) || ! is_array($current[$k])) {
-                        $current[$k] = [];
-                    }
-                    $current = &$current[$k];
-                }
-            }
+            Arr::set($result, $key, $value);
         }
 
         return $this->sortNestedArray($result);
