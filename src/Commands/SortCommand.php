@@ -58,6 +58,9 @@ class SortCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * @return Collection<int, string>
+     */
     protected function getLocales(): Collection
     {
         $langPath = config('po.paths.lang');

@@ -124,6 +124,9 @@ class ExportCommand extends Command
             ->reduce(fn ($translation, $placeholder) => str_replace(':'.$placeholder, '{'.$placeholder.'}', $translation), $translation);
     }
 
+    /**
+     * @return Collection<string, Language>
+     */
     protected function getLocales(): Collection
     {
         $configuredLanguages = (array) config('po.languages');

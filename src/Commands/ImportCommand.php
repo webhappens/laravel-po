@@ -141,6 +141,9 @@ class ImportCommand extends Command
             ->reduce(fn ($translation, $placeholder) => str_replace('{'.$placeholder.'}', ':'.$placeholder, $translation), $translation);
     }
 
+    /**
+     * @return Collection<string, Translations>
+     */
     protected function getLanguageFiles(): Collection
     {
         $importPath = config('po.paths.import');

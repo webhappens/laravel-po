@@ -11,6 +11,8 @@ trait ManagesTranslations
 {
     /**
      * Read a translation file and return its contents as an array
+     *
+     * @return array<string, mixed>
      */
     protected function readTranslationFile(string $locale, string $group): array
     {
@@ -26,6 +28,8 @@ trait ManagesTranslations
 
     /**
      * Write translations to a file
+     *
+     * @param  array<string, mixed>  $translations
      */
     protected function writeTranslationFile(string $locale, string $group, array $translations): void
     {
@@ -63,6 +67,9 @@ trait ManagesTranslations
 
     /**
      * Sort translations based on configuration (flat or nested)
+     *
+     * @param  array<string, mixed>  $translations
+     * @return array<string, mixed>
      */
     protected function sortTranslations(array $translations): array
     {
@@ -76,6 +83,9 @@ trait ManagesTranslations
 
     /**
      * Convert flat dot-notation array to nested array
+     *
+     * @param  Collection<string, string>  $translations
+     * @return array<string, mixed>
      */
     protected function toNestedArray(Collection $translations): array
     {
@@ -90,6 +100,9 @@ trait ManagesTranslations
 
     /**
      * Recursively sort a nested array
+     *
+     * @param  array<array-key, mixed>  $array
+     * @return array<array-key, mixed>
      */
     protected function sortNestedArray(array $array): array
     {
@@ -106,6 +119,8 @@ trait ManagesTranslations
 
     /**
      * Get all translation files for a given locale
+     *
+     * @return Collection<int, string>
      */
     protected function getTranslationGroups(string $locale): Collection
     {

@@ -138,6 +138,9 @@ class PoeditorDownloadCommand extends Command
         return $success;
     }
 
+    /**
+     * @return Collection<int, string>
+     */
     protected function getLocales(string $apiToken, string $projectId): Collection
     {
         // If specific languages are provided as arguments, use those (no filtering)
@@ -159,6 +162,9 @@ class PoeditorDownloadCommand extends Command
         return collect();
     }
 
+    /**
+     * @return Collection<int, string>
+     */
     protected function getActiveLanguages(): Collection
     {
         $configuredLanguages = (array) config('po.languages');
@@ -177,6 +183,9 @@ class PoeditorDownloadCommand extends Command
             ->keys();
     }
 
+    /**
+     * @return Collection<int, string>
+     */
     protected function fetchPoeditorLanguages(string $apiToken, string $projectId): Collection
     {
         $response = Http::asForm()->post('https://api.poeditor.com/v2/languages/list', [
