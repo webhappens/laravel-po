@@ -2,7 +2,6 @@
 
 namespace WebHappens\LaravelPo\Commands;
 
-use Gettext\Languages\Language;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
@@ -27,9 +26,7 @@ class SortCommand extends Command
         }
 
         foreach ($locales as $locale) {
-            $language = Language::getById($locale);
-            $languageName = $language ? $language->name : $locale;
-            $this->components->info('Sorting translations for '.$languageName.' ['.$locale.']');
+            $this->components->info('Sorting translations for '.$this->getLanguageName($locale).' ['.$locale.']');
 
             $groups = $this->getTranslationGroups($locale);
 

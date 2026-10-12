@@ -2,7 +2,6 @@
 
 namespace WebHappens\LaravelPo\Commands;
 
-use Gettext\Languages\Language;
 use Gettext\Loader\PoLoader;
 use Gettext\Translation;
 use Gettext\Translations;
@@ -31,8 +30,7 @@ class ImportCommand extends Command
     public function handle(): int
     {
         foreach ($this->getLanguageFiles() as $locale => $translations) {
-            $language = Language::getById($locale);
-            $this->components->info('Loading translations for '.$language->name.' ['.$locale.']');
+            $this->components->info('Loading translations for '.$this->getLanguageName($locale).' ['.$locale.']');
 
             $importedGroups = [];
 

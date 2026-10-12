@@ -2,6 +2,7 @@
 
 namespace WebHappens\LaravelPo\Commands\Concerns;
 
+use Gettext\Languages\Language;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -115,6 +116,14 @@ trait ManagesTranslations
         }
 
         return $array;
+    }
+
+    /**
+     * Get the display name for a locale, falling back to the locale itself
+     */
+    protected function getLanguageName(string $locale): string
+    {
+        return Language::getById($locale)->name ?? $locale;
     }
 
     /**

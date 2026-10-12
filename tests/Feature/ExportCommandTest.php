@@ -330,4 +330,29 @@ class ExportCommandTest extends TestCase
         $this->assertTrue(File::exists($this->tempExportPath.'/fr.po'));
         $this->assertFalse(File::exists($this->tempExportPath.'/de.po'));
     }
+
+    #[Test]
+    public function it_fails_gracefully_when_the_default_locale_is_not_recognised()
+    {
+        $this->app->setLocale('xx');
+        $this->createTranslationFile('xx', 'actions', ['save' => 'Save']);
+
+        $this->artisan('po:export')
+            ->expectsOutputToContain('The default locale [xx] is not a recognised language code.')
+            ->assertFailed();
+    }
+
+    #[Test]
+    public function it_skips_locales_that_are_not_recognised()
+    {
+        $this->createTranslationFile('en', 'actions', ['save' => 'Save']);
+        $this->createTranslationFile('xx', 'actions', ['save' => 'Save']);
+
+        $this->artisan('po:export', ['--all' => true])
+            ->expectsOutputToContain('Skipping [xx] as it is not a recognised language code.')
+            ->assertSuccessful();
+
+        $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
+        $this->assertFalse(File::exists($this->tempExportPath.'/xx.po'));
+    }
 }

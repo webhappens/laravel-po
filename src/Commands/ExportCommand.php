@@ -36,7 +36,12 @@ class ExportCommand extends Command
     public function handle(): int
     {
         $appLocale = app()->getLocale();
-        $appLanguage = Language::getById($appLocale);
+
+        if (! $appLanguage = Language::getById($appLocale)) {
+            $this->components->error("The default locale [$appLocale] is not a recognised language code.");
+
+            return Command::FAILURE;
+        }
 
         $this->components->info('Generating translation files using the default language: '.$appLanguage->name.' ['.$appLocale.']');
 
@@ -55,7 +60,13 @@ class ExportCommand extends Command
             }
         }
 
-        foreach ($this->getLocales() as $locale => $language) {
+        foreach ($this->getLocales() as $locale) {
+            if (! $language = Language::getById($locale)) {
+                $this->components->warn("Skipping [$locale] as it is not a recognised language code.");
+
+                continue;
+            }
+
             $this->components->task('Creating PO file for '.$language->name.' ['.$locale.']', function () use ($pot, $locale, $exportPath) {
                 (new PoGenerator)->generateFile(
                     $this->setTranslationsForLocale($pot, $locale),
@@ -125,18 +136,18 @@ class ExportCommand extends Command
     }
 
     /**
-     * @return Collection<string, Language>
+     * @return Collection<int, string>
      */
     protected function getLocales(): Collection
     {
-        $locales = $this->getEnabledLocales()
-            ->mapWithKeys(fn ($locale) => [$locale => Language::getById($locale)])
-            ->filter();
+        $locales = $this->getEnabledLocales();
 
         if ($this->option('all')) {
             return $locales;
         }
 
-        return $locales->only($this->argument('lang') ?: app()->getLocale());
+        return $locales
+            ->intersect($this->argument('lang') ?: [app()->getLocale()])
+            ->values();
     }
 }

@@ -745,4 +745,28 @@ PO;
             ->expectsOutputToContain('The import directory is already empty.')
             ->assertSuccessful();
     }
+
+    #[Test]
+    public function it_imports_locales_that_are_not_recognised()
+    {
+        $poContent = <<<'PO'
+msgid ""
+msgstr ""
+"Language: xx\n"
+
+msgctxt "actions.save"
+msgid "Save"
+msgstr "Sauvegarder"
+PO;
+
+        $this->createPoFile('xx', $poContent);
+
+        config(['po.languages' => [
+            'xx' => ['label' => 'Custom', 'enabled' => true],
+        ]]);
+
+        $this->artisan('po:import')->assertSuccessful();
+
+        $this->assertEquals('Sauvegarder', $this->getGeneratedTranslations('xx', 'actions')['save']);
+    }
 }
