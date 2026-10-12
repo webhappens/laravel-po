@@ -120,8 +120,8 @@ class ExportCommand extends Command
     public function formatPlaceholdersAsPerlBrace(string $translation): string
     {
         return Str::of($translation)
-            ->matchAll('/\:(\w+)/')
-            ->reduce(fn ($translation, $placeholder) => str_replace(':'.$placeholder, '{'.$placeholder.'}', $translation), $translation);
+            ->replaceMatches('/:(\w+)/', '{$1}')
+            ->toString();
     }
 
     /**

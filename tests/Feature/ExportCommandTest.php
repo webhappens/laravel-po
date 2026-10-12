@@ -47,6 +47,19 @@ class ExportCommandTest extends TestCase
     }
 
     #[Test]
+    public function it_converts_placeholders_that_share_a_prefix()
+    {
+        $this->createTranslationFile('en', 'messages', [
+            'greeting' => 'Hi :user, your username is :username',
+        ]);
+
+        $this->artisan('po:export')->assertSuccessful();
+
+        $content = $this->getExportedPoFile('en');
+        $this->assertStringContainsString('Hi {user}, your username is {username}', $content);
+    }
+
+    #[Test]
     public function it_excludes_configured_translation_groups()
     {
         // Configure excluded groups
