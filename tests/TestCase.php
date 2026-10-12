@@ -9,7 +9,9 @@ use WebHappens\LaravelPo\PoServiceProvider;
 abstract class TestCase extends Orchestra
 {
     protected string $tempLangPath;
+
     protected string $tempExportPath;
+
     protected string $tempImportPath;
 
     protected function setUp(): void

@@ -11,7 +11,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\VarExporter\VarExporter;
 use WebHappens\LaravelPo\Commands\Concerns\ClearsDirectories;
 use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 use WebHappens\LaravelPo\Events\TranslationsImported;
@@ -19,6 +18,7 @@ use WebHappens\LaravelPo\Events\TranslationsImported;
 class ImportCommand extends Command
 {
     use ClearsDirectories, ManagesTranslations;
+
     protected $signature = 'po:import
         {lang?* : Provide the language codes for generation, or leave blank for all }
         {--fuzzy : Include fuzzy translations }
@@ -47,7 +47,7 @@ class ImportCommand extends Command
                     $groupFile = $langPath.'/'.$locale.DIRECTORY_SEPARATOR."$group.php";
                     $nonMatchingTranslations = collect();
 
-                    $this->components->task('Generating file: '.$groupFile, function () use ($locale, $group, $groupFile, $translations, $nonMatchingTranslations, &$importedGroups) {
+                    $this->components->task('Generating file: '.$groupFile, function () use ($locale, $group, $translations, $nonMatchingTranslations, &$importedGroups) {
                         if (app()->getLocale() == $locale) {
                             $translations
                                 ->filter(fn ($translation) => $translation->getOriginal() !== $translation->getTranslation())

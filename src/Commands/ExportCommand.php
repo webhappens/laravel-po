@@ -17,6 +17,7 @@ use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 class ExportCommand extends Command
 {
     use ClearsDirectories, ManagesTranslations;
+
     protected $signature = 'po:export
         {lang?* : Provide the language codes for generation, or leave blank for default language }
         {--all : Export all enabled languages }
@@ -133,6 +134,7 @@ class ExportCommand extends Command
             $configuredLanguages = collect($directories)
                 ->mapWithKeys(function ($dir) {
                     $locale = basename($dir);
+
                     return [$locale => ['label' => $locale, 'enabled' => true]];
                 })
                 ->toArray();
@@ -149,5 +151,4 @@ class ExportCommand extends Command
 
         return $locales->only($this->argument('lang') ?: app()->getLocale());
     }
-
 }

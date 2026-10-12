@@ -11,8 +11,6 @@ class TranslationsImported
 
     /**
      * The locale for which translations were imported.
-     *
-     * @var string
      */
     public string $locale;
 
@@ -26,7 +24,6 @@ class TranslationsImported
     /**
      * Create a new event instance.
      *
-     * @param  string  $locale
      * @param  array<string, array<string>>  $groups  An array of group names to arrays of imported keys
      */
     public function __construct(string $locale, array $groups)

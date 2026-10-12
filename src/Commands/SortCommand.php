@@ -35,6 +35,7 @@ class SortCommand extends Command
 
             if ($groups->isEmpty()) {
                 $this->components->warn("No translation files found for {$locale}");
+
                 continue;
             }
 
