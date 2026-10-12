@@ -69,7 +69,7 @@ class ExportCommand extends Command
         return Command::SUCCESS;
     }
 
-    public function getTranslationTerms($locale): Translations
+    public function getTranslationTerms(string $locale): Translations
     {
         $pot = Translations::create(language: $locale);
 
