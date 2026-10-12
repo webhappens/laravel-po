@@ -4,7 +4,7 @@
 
 ### Requirements
 
-- PHP 8.2+
+- PHP 8.3+
 - Composer dependencies installed
 
 ### Installation
@@ -47,6 +47,16 @@ For example:
 
 ```bash
 vendor/bin/phpunit --filter it_exports_translations_to_po_file
+```
+
+## Code Style and Static Analysis
+
+Code style is enforced with [Laravel Pint](https://laravel.com/docs/pint) and static analysis is run with [Larastan](https://github.com/larastan/larastan). Both run in CI.
+
+```bash
+composer lint        # Fix code style
+composer lint:check  # Check code style without changing files
+composer analyse     # Run PHPStan
 ```
 
 ## Do I Need a POEditor Project?
