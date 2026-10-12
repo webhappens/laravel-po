@@ -127,8 +127,14 @@ trait ManagesTranslations
         $configuredLanguages = (array) config('po.languages');
 
         if (empty($configuredLanguages)) {
+            $ignoredPaths = collect([config('po.paths.export'), config('po.paths.import')])
+                ->map(fn ($path) => realpath($path))
+                ->filter();
+
             return collect(File::directories(config('po.paths.lang')))
-                ->map(fn ($dir) => basename($dir));
+                ->reject(fn ($dir) => basename($dir) === 'vendor' || $ignoredPaths->contains(realpath($dir)))
+                ->map(fn ($dir) => basename($dir))
+                ->values();
         }
 
         return collect($configuredLanguages)

@@ -61,7 +61,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Define the languages supported by your application. If left empty or null,
-    | languages will be auto-detected by scanning directories in your lang path.
+    | languages will be auto-detected by scanning directories in your lang path
+    | (ignoring the vendor directory and the export and import paths).
     |
     | Format:
     | 'locale' => [
