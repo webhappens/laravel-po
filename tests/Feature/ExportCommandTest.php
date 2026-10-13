@@ -97,6 +97,26 @@ class ExportCommandTest extends TestCase
     }
 
     #[Test]
+    public function it_fills_translations_for_the_target_locale()
+    {
+        $this->createTranslationFile('en', 'actions', ['save' => 'Save', 'cancel' => 'Cancel']);
+        $this->createTranslationFile('en', 'messages', ['welcome' => 'Hello :name', 'nested' => ['hello' => 'Hello']]);
+        $this->createTranslationFile('fr', 'actions', ['save' => 'Enregistrer']);
+        $this->createTranslationFile('fr', 'messages', ['welcome' => 'Bonjour :name', 'nested' => ['hello' => 'Salut']]);
+
+        $this->artisan('po:export', ['lang' => ['fr']])->assertSuccessful();
+
+        $content = $this->getExportedPoFile('fr');
+
+        $this->assertStringContainsString("msgctxt \"actions.save\"\nmsgid \"Save\"\nmsgstr \"Enregistrer\"", $content);
+        $this->assertStringContainsString("msgctxt \"messages.welcome\"\nmsgid \"Hello {name}\"\nmsgstr \"Bonjour {name}\"", $content);
+        $this->assertStringContainsString("msgctxt \"messages.nested.hello\"\nmsgid \"Hello\"\nmsgstr \"Salut\"", $content);
+
+        // Untranslated terms are exported with an empty msgstr
+        $this->assertStringContainsString("msgctxt \"actions.cancel\"\nmsgid \"Cancel\"\nmsgstr \"\"", $content);
+    }
+
+    #[Test]
     public function it_handles_nested_translations()
     {
         $this->createTranslationFile('en', 'messages', [

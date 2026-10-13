@@ -17,8 +17,7 @@ trait ManagesTranslations
      */
     protected function readTranslationFile(string $locale, string $group): array
     {
-        $langPath = config('po.paths.lang');
-        $filePath = $langPath.'/'.$locale.'/'.$group.'.php';
+        $filePath = lang_path($locale.'/'.$group.'.php');
 
         if (! File::exists($filePath)) {
             return [];
@@ -34,8 +33,7 @@ trait ManagesTranslations
      */
     protected function writeTranslationFile(string $locale, string $group, array $translations): void
     {
-        $langPath = config('po.paths.lang');
-        $directory = $langPath.'/'.$locale;
+        $directory = lang_path($locale);
         $filePath = $directory.'/'.$group.'.php';
 
         // Delete file if no translations
@@ -140,7 +138,7 @@ trait ManagesTranslations
                 ->map(fn ($path) => realpath($path))
                 ->filter();
 
-            return collect(File::directories(config('po.paths.lang')))
+            return collect(File::directories(lang_path()))
                 ->reject(fn ($dir) => basename($dir) === 'vendor' || $ignoredPaths->contains(realpath($dir)))
                 ->map(fn ($dir) => basename($dir))
                 ->values();
@@ -158,8 +156,7 @@ trait ManagesTranslations
      */
     protected function getTranslationGroups(string $locale): Collection
     {
-        $langPath = config('po.paths.lang');
-        $localePath = $langPath.'/'.$locale;
+        $localePath = lang_path($locale);
 
         if (! File::isDirectory($localePath)) {
             return collect();

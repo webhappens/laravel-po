@@ -62,7 +62,6 @@ return [
     'paths' => [
         'export' => lang_path('export'),  // Where PO files are exported
         'import' => lang_path('import'),  // Where PO files are imported from
-        'lang' => lang_path(),            // Root translation directory
     ],
 
     'excluded_groups' => [
@@ -80,6 +79,8 @@ return [
     ],
 ];
 ```
+
+Translation files are read from and written to your application's lang path (`lang_path()`), so imported translations are always where Laravel loads them from. If your translations live somewhere other than the default `lang` directory, set the path in your application with `$app->useLangPath()` and the package will follow it.
 
 ### POEditor Integration
 

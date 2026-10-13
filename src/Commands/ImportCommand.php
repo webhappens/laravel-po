@@ -40,8 +40,7 @@ class ImportCommand extends Command
                 ->filter($this->matchesPattern(...))
                 ->groupBy(fn ($translation) => Str::before($translation->getContext(), '.'))
                 ->each(function ($translations, $group) use ($locale, &$importedGroups) {
-                    $langPath = config('po.paths.lang');
-                    $groupFile = $langPath.'/'.$locale.DIRECTORY_SEPARATOR."$group.php";
+                    $groupFile = lang_path($locale.'/'.$group.'.php');
                     $nonMatchingTranslations = collect();
 
                     $this->components->task('Generating file: '.$groupFile, function () use ($locale, $group, $translations, $nonMatchingTranslations, &$importedGroups) {
