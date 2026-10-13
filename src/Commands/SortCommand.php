@@ -4,6 +4,7 @@ namespace WebHappens\LaravelPo\Commands;
 
 use Gettext\Languages\Language;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 
@@ -35,6 +36,7 @@ class SortCommand extends Command
 
             if ($groups->isEmpty()) {
                 $this->components->warn("No translation files found for {$locale}");
+
                 continue;
             }
 
@@ -56,10 +58,13 @@ class SortCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function getLocales()
+    /**
+     * @return Collection<int, string>
+     */
+    protected function getLocales(): Collection
     {
         $langPath = config('po.paths.lang');
-        $configuredLanguages = config('po.languages', []);
+        $configuredLanguages = (array) config('po.languages');
 
         // Get enabled locales from config or auto-detect
         if (empty($configuredLanguages)) {

@@ -2,10 +2,8 @@
 
 namespace WebHappens\LaravelPo\Tests\Feature;
 
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use PHPUnit\Framework\Attributes\Test;
-use WebHappens\LaravelPo\Events\TranslationsImported;
 use WebHappens\LaravelPo\Tests\TestCase;
 
 class ImportCommandTest extends TestCase

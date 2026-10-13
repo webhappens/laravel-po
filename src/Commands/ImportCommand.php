@@ -11,7 +11,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\VarExporter\VarExporter;
 use WebHappens\LaravelPo\Commands\Concerns\ClearsDirectories;
 use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 use WebHappens\LaravelPo\Events\TranslationsImported;
@@ -19,6 +18,7 @@ use WebHappens\LaravelPo\Events\TranslationsImported;
 class ImportCommand extends Command
 {
     use ClearsDirectories, ManagesTranslations;
+
     protected $signature = 'po:import
         {lang?* : Provide the language codes for generation, or leave blank for all }
         {--fuzzy : Include fuzzy translations }
@@ -37,17 +37,17 @@ class ImportCommand extends Command
 
             $importedGroups = [];
 
-            collect($translations)
+            collect($translations->getTranslations())
                 ->lazy()
-                ->reject([$this, 'isFuzzy'])
-                ->filter([$this, 'matchesPattern'])
+                ->reject($this->isFuzzy(...))
+                ->filter($this->matchesPattern(...))
                 ->groupBy(fn ($translation) => Str::before($translation->getContext(), '.'))
                 ->each(function ($translations, $group) use ($locale, &$importedGroups) {
                     $langPath = config('po.paths.lang');
                     $groupFile = $langPath.'/'.$locale.DIRECTORY_SEPARATOR."$group.php";
                     $nonMatchingTranslations = collect();
 
-                    $this->components->task('Generating file: '.$groupFile, function () use ($locale, $group, $groupFile, $translations, $nonMatchingTranslations, &$importedGroups) {
+                    $this->components->task('Generating file: '.$groupFile, function () use ($locale, $group, $translations, $nonMatchingTranslations, &$importedGroups) {
                         if (app()->getLocale() == $locale) {
                             $translations
                                 ->filter(fn ($translation) => $translation->getOriginal() !== $translation->getTranslation())
@@ -58,7 +58,7 @@ class ImportCommand extends Command
                             ->keyBy(fn ($translation) => Str::after($translation->getContext(), '.'))
                             ->map(fn ($translation) => $translation->getTranslation())
                             ->filter()
-                            ->map([$this, 'formatPlaceholdersFromPerlBrace']);
+                            ->map($this->formatPlaceholdersFromPerlBrace(...));
 
                         // Track imported keys for event
                         $importedGroups[$group] = $translations->keys()->toArray();
@@ -141,10 +141,13 @@ class ImportCommand extends Command
             ->reduce(fn ($translation, $placeholder) => str_replace('{'.$placeholder.'}', ':'.$placeholder, $translation), $translation);
     }
 
+    /**
+     * @return Collection<string, Translations>
+     */
     protected function getLanguageFiles(): Collection
     {
         $importPath = config('po.paths.import');
-        $configuredLanguages = config('po.languages', []);
+        $configuredLanguages = (array) config('po.languages');
 
         // Auto-detect enabled languages if not configured
         if (empty($configuredLanguages)) {

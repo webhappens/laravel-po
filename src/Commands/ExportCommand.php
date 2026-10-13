@@ -7,6 +7,7 @@ use Gettext\Languages\Language;
 use Gettext\Translation;
 use Gettext\Translations;
 use Illuminate\Console\Command;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -17,6 +18,7 @@ use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 class ExportCommand extends Command
 {
     use ClearsDirectories, ManagesTranslations;
+
     protected $signature = 'po:export
         {lang?* : Provide the language codes for generation, or leave blank for default language }
         {--all : Export all enabled languages }
@@ -67,16 +69,17 @@ class ExportCommand extends Command
         return Command::SUCCESS;
     }
 
-    public function getTranslationTerms($locale): Translations
+    public function getTranslationTerms(string $locale): Translations
     {
         $pot = Translations::create(language: $locale);
 
-        $this->getTranslationGroups($locale)
-            ->mapWithKeys(fn ($group) => [$group => $this->readTranslationFile($locale, $group)])
-            ->dot()
+        $groups = $this->getTranslationGroups($locale)
+            ->mapWithKeys(fn ($group) => [$group => $this->readTranslationFile($locale, $group)]);
+
+        collect(Arr::dot($groups))
             ->reject(fn ($text) => ! $text)
-            ->filter([$this, 'shouldIncludeTranslation'])
-            ->map([$this, 'formatPlaceholdersAsPerlBrace'])
+            ->filter($this->shouldIncludeTranslation(...))
+            ->map($this->formatPlaceholdersAsPerlBrace(...))
             ->map(fn ($original, $key) => Translation::create($key, $original))
             ->each(fn ($translation) => $pot->add($translation));
 
@@ -108,7 +111,7 @@ class ExportCommand extends Command
 
     public function shouldIncludeTranslation(string $translation, string $key): bool
     {
-        $exclude = config('po.excluded_groups', []);
+        $exclude = (array) config('po.excluded_groups');
 
         return ! collect($exclude)
             ->first(fn ($pattern) => str($key)->is($pattern.'*'));
@@ -121,9 +124,12 @@ class ExportCommand extends Command
             ->reduce(fn ($translation, $placeholder) => str_replace(':'.$placeholder, '{'.$placeholder.'}', $translation), $translation);
     }
 
+    /**
+     * @return Collection<string, Language>
+     */
     protected function getLocales(): Collection
     {
-        $configuredLanguages = config('po.languages', []);
+        $configuredLanguages = (array) config('po.languages');
 
         // Auto-detect languages from directories if not configured
         if (empty($configuredLanguages)) {
@@ -133,6 +139,7 @@ class ExportCommand extends Command
             $configuredLanguages = collect($directories)
                 ->mapWithKeys(function ($dir) {
                     $locale = basename($dir);
+
                     return [$locale => ['label' => $locale, 'enabled' => true]];
                 })
                 ->toArray();
@@ -149,5 +156,4 @@ class ExportCommand extends Command
 
         return $locales->only($this->argument('lang') ?: app()->getLocale());
     }
-
 }
