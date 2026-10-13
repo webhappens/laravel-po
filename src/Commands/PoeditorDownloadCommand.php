@@ -6,9 +6,12 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 
 class PoeditorDownloadCommand extends Command
 {
+    use ManagesTranslations;
+
     protected $signature = 'po:download
         {lang?* : A list of language codes to download }
         {--all : Download all languages available in POEditor project }
@@ -155,32 +158,11 @@ class PoeditorDownloadCommand extends Command
 
         // If --active flag is set, return active languages from config
         if ($this->option('active')) {
-            return $this->getActiveLanguages();
+            return $this->getEnabledLocales();
         }
 
         // Otherwise, return empty collection (user must specify langs, --all, or --active)
         return collect();
-    }
-
-    /**
-     * @return Collection<int, string>
-     */
-    protected function getActiveLanguages(): Collection
-    {
-        $configuredLanguages = (array) config('po.languages');
-
-        // Auto-detect enabled languages if not configured
-        if (empty($configuredLanguages)) {
-            $langPath = config('po.paths.lang');
-            $directories = File::directories($langPath);
-
-            return collect($directories)
-                ->map(fn ($dir) => basename($dir));
-        }
-
-        return collect($configuredLanguages)
-            ->where('enabled', true)
-            ->keys();
     }
 
     /**

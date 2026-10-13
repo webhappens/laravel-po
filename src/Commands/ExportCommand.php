@@ -36,7 +36,12 @@ class ExportCommand extends Command
     public function handle(): int
     {
         $appLocale = app()->getLocale();
-        $appLanguage = Language::getById($appLocale);
+
+        if (! $appLanguage = Language::getById($appLocale)) {
+            $this->components->error("The default locale [$appLocale] is not a recognised language code.");
+
+            return Command::FAILURE;
+        }
 
         $this->components->info('Generating translation files using the default language: '.$appLanguage->name.' ['.$appLocale.']');
 
@@ -55,7 +60,13 @@ class ExportCommand extends Command
             }
         }
 
-        foreach ($this->getLocales() as $locale => $language) {
+        foreach ($this->getLocales() as $locale) {
+            if (! $language = Language::getById($locale)) {
+                $this->components->warn("Skipping [$locale] as it is not a recognised language code.");
+
+                continue;
+            }
+
             $this->components->task('Creating PO file for '.$language->name.' ['.$locale.']', function () use ($pot, $locale, $exportPath) {
                 (new PoGenerator)->generateFile(
                     $this->setTranslationsForLocale($pot, $locale),
@@ -114,46 +125,29 @@ class ExportCommand extends Command
         $exclude = (array) config('po.excluded_groups');
 
         return ! collect($exclude)
-            ->first(fn ($pattern) => str($key)->is($pattern.'*'));
+            ->contains(fn ($pattern) => str($key)->is([$pattern, $pattern.'.*']));
     }
 
     public function formatPlaceholdersAsPerlBrace(string $translation): string
     {
         return Str::of($translation)
-            ->matchAll('/\:(\w+)/')
-            ->reduce(fn ($translation, $placeholder) => str_replace(':'.$placeholder, '{'.$placeholder.'}', $translation), $translation);
+            ->replaceMatches('/:(\w+)/', '{$1}')
+            ->toString();
     }
 
     /**
-     * @return Collection<string, Language>
+     * @return Collection<int, string>
      */
     protected function getLocales(): Collection
     {
-        $configuredLanguages = (array) config('po.languages');
-
-        // Auto-detect languages from directories if not configured
-        if (empty($configuredLanguages)) {
-            $langPath = config('po.paths.lang');
-            $directories = File::directories($langPath);
-
-            $configuredLanguages = collect($directories)
-                ->mapWithKeys(function ($dir) {
-                    $locale = basename($dir);
-
-                    return [$locale => ['label' => $locale, 'enabled' => true]];
-                })
-                ->toArray();
-        }
-
-        $locales = collect($configuredLanguages)
-            ->where('enabled', true)
-            ->map(fn ($language, $locale) => Language::getById($locale))
-            ->filter();
+        $locales = $this->getEnabledLocales();
 
         if ($this->option('all')) {
             return $locales;
         }
 
-        return $locales->only($this->argument('lang') ?: app()->getLocale());
+        return $locales
+            ->intersect($this->argument('lang') ?: [app()->getLocale()])
+            ->values();
     }
 }

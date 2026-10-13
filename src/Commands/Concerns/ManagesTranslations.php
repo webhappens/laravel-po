@@ -2,6 +2,7 @@
 
 namespace WebHappens\LaravelPo\Commands\Concerns;
 
+use Gettext\Languages\Language;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -115,6 +116,39 @@ trait ManagesTranslations
         }
 
         return $array;
+    }
+
+    /**
+     * Get the display name for a locale, falling back to the locale itself
+     */
+    protected function getLanguageName(string $locale): string
+    {
+        return Language::getById($locale)->name ?? $locale;
+    }
+
+    /**
+     * Get the enabled locales from config, or auto-detect them from the lang directory
+     *
+     * @return Collection<int, string>
+     */
+    protected function getEnabledLocales(): Collection
+    {
+        $configuredLanguages = (array) config('po.languages');
+
+        if (empty($configuredLanguages)) {
+            $ignoredPaths = collect([config('po.paths.export'), config('po.paths.import')])
+                ->map(fn ($path) => realpath($path))
+                ->filter();
+
+            return collect(File::directories(config('po.paths.lang')))
+                ->reject(fn ($dir) => basename($dir) === 'vendor' || $ignoredPaths->contains(realpath($dir)))
+                ->map(fn ($dir) => basename($dir))
+                ->values();
+        }
+
+        return collect($configuredLanguages)
+            ->where('enabled', true)
+            ->keys();
     }
 
     /**

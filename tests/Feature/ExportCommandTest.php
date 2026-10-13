@@ -47,6 +47,19 @@ class ExportCommandTest extends TestCase
     }
 
     #[Test]
+    public function it_converts_placeholders_that_share_a_prefix()
+    {
+        $this->createTranslationFile('en', 'messages', [
+            'greeting' => 'Hi :user, your username is :username',
+        ]);
+
+        $this->artisan('po:export')->assertSuccessful();
+
+        $content = $this->getExportedPoFile('en');
+        $this->assertStringContainsString('Hi {user}, your username is {username}', $content);
+    }
+
+    #[Test]
     public function it_excludes_configured_translation_groups()
     {
         // Configure excluded groups
@@ -66,6 +79,21 @@ class ExportCommandTest extends TestCase
         // Should exclude auth and validation
         $this->assertStringNotContainsString('auth.failed', $content);
         $this->assertStringNotContainsString('validation.required', $content);
+    }
+
+    #[Test]
+    public function it_does_not_exclude_groups_that_share_a_prefix_with_an_excluded_group()
+    {
+        config(['po.excluded_groups' => ['auth']]);
+
+        $this->createTranslationFile('en', 'auth', ['failed' => 'These credentials do not match']);
+        $this->createTranslationFile('en', 'authors', ['title' => 'Our authors']);
+
+        $this->artisan('po:export')->assertSuccessful();
+
+        $content = $this->getExportedPoFile('en');
+        $this->assertStringNotContainsString('auth.failed', $content);
+        $this->assertStringContainsString('authors.title', $content);
     }
 
     #[Test]
@@ -301,5 +329,30 @@ class ExportCommandTest extends TestCase
         $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
         $this->assertTrue(File::exists($this->tempExportPath.'/fr.po'));
         $this->assertFalse(File::exists($this->tempExportPath.'/de.po'));
+    }
+
+    #[Test]
+    public function it_fails_gracefully_when_the_default_locale_is_not_recognised()
+    {
+        $this->app->setLocale('xx');
+        $this->createTranslationFile('xx', 'actions', ['save' => 'Save']);
+
+        $this->artisan('po:export')
+            ->expectsOutputToContain('The default locale [xx] is not a recognised language code.')
+            ->assertFailed();
+    }
+
+    #[Test]
+    public function it_skips_locales_that_are_not_recognised()
+    {
+        $this->createTranslationFile('en', 'actions', ['save' => 'Save']);
+        $this->createTranslationFile('xx', 'actions', ['save' => 'Save']);
+
+        $this->artisan('po:export', ['--all' => true])
+            ->expectsOutputToContain('Skipping [xx] as it is not a recognised language code.')
+            ->assertSuccessful();
+
+        $this->assertTrue(File::exists($this->tempExportPath.'/en.po'));
+        $this->assertFalse(File::exists($this->tempExportPath.'/xx.po'));
     }
 }

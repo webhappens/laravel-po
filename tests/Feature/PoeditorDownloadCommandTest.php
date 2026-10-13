@@ -200,6 +200,32 @@ class PoeditorDownloadCommandTest extends TestCase
     }
 
     #[Test]
+    public function it_ignores_non_locale_directories_when_auto_detecting_active_languages()
+    {
+        Http::fake([
+            'https://api.poeditor.com/v2/projects/export' => Http::response([
+                'response' => ['status' => 'success', 'message' => 'OK'],
+                'result' => ['url' => 'https://download.poeditor.com/test.po'],
+            ], 200),
+            'https://download.poeditor.com/test.po' => Http::response('PO content', 200),
+        ]);
+
+        // The export and import directories live inside the lang path by default
+        File::makeDirectory($this->tempLangPath.'/fr');
+        File::makeDirectory($this->tempLangPath.'/vendor');
+
+        $this->artisan('po:download', ['--active' => true])->assertSuccessful();
+
+        $languages = collect(Http::recorded())
+            ->map(fn ($record) => $record[0]['language'] ?? null)
+            ->filter()
+            ->values()
+            ->all();
+
+        $this->assertSame(['fr'], $languages);
+    }
+
+    #[Test]
     public function it_handles_api_error_responses()
     {
         Http::fake([
