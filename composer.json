@@ -23,6 +23,7 @@
         "php": "^8.3|^8.4|^8.5",
         "laravel/framework": "^11.0|^12.0|^13.0",
         "gettext/gettext": "^5.7",
+        "gettext/languages": "^2.3",
         "symfony/finder": "^6.0|^7.0|^8.0",
         "symfony/var-exporter": "^6.0|^7.0|^8.0"
     },
