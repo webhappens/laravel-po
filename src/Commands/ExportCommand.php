@@ -11,7 +11,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use Illuminate\Translation\Translator;
 use WebHappens\LaravelPo\Commands\Concerns\ClearsDirectories;
 use WebHappens\LaravelPo\Commands\Concerns\ManagesTranslations;
 
@@ -26,12 +25,6 @@ class ExportCommand extends Command
         {--force : Force the operation without confirmation }';
 
     protected $description = 'Generate PO files for language translation';
-
-    public function __construct(
-        protected Translator $translator,
-    ) {
-        parent::__construct();
-    }
 
     public function handle(): int
     {
@@ -84,10 +77,7 @@ class ExportCommand extends Command
     {
         $pot = Translations::create(language: $locale);
 
-        $groups = $this->getTranslationGroups($locale)
-            ->mapWithKeys(fn ($group) => [$group => $this->readTranslationFile($locale, $group)]);
-
-        collect(Arr::dot($groups))
+        collect($this->getFlattenedTranslations($locale))
             ->reject(fn ($text) => ! $text)
             ->filter($this->shouldIncludeTranslation(...))
             ->map($this->formatPlaceholdersAsPerlBrace(...))
@@ -100,24 +90,32 @@ class ExportCommand extends Command
     public function setTranslationsForLocale(Translations $translations, string $locale): Translations
     {
         $translations = (clone $translations)->setLanguage($locale);
+        $existing = $this->getFlattenedTranslations($locale);
 
         foreach ($translations as $translation) {
-            if (! $this->translator->hasForLocale($translation->getContext(), $locale)) {
+            $text = $existing[$translation->getContext()] ?? null;
+
+            if (! is_string($text)) {
                 continue;
             }
 
-            $translation->translate(
-                $this->formatPlaceholdersAsPerlBrace(
-                    $this->translator->get(
-                        key: $translation->getContext(),
-                        locale: $locale,
-                        fallback: false,
-                    )
-                )
-            );
+            $translation->translate($this->formatPlaceholdersAsPerlBrace($text));
         }
 
         return $translations;
+    }
+
+    /**
+     * Read all translation groups for a locale, flattened to dot-notation keys
+     *
+     * @return array<string, mixed>
+     */
+    protected function getFlattenedTranslations(string $locale): array
+    {
+        $groups = $this->getTranslationGroups($locale)
+            ->mapWithKeys(fn ($group) => [$group => $this->readTranslationFile($locale, $group)]);
+
+        return Arr::dot($groups);
     }
 
     public function shouldIncludeTranslation(string $translation, string $key): bool
