@@ -8,7 +8,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configure the paths used for exporting and importing PO files.
-    | These paths are fully configurable to support testing and custom setups.
+    | Translation files are always read from and written to your
+    | application's lang path, as returned by lang_path().
     |
     */
 
@@ -18,9 +19,6 @@ return [
 
         // Directory where PO files to be imported are located
         'import' => lang_path('import'),
-
-        // Root directory containing your Laravel translation files
-        'lang' => lang_path(),
     ],
 
     /*

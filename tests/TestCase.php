@@ -27,9 +27,10 @@ abstract class TestCase extends Orchestra
         File::makeDirectory($this->tempExportPath, 0755, true);
         File::makeDirectory($this->tempImportPath, 0755, true);
 
-        // Override config with test paths
+        // Point the application and package at the test paths
+        $this->app->useLangPath($this->tempLangPath);
+
         config([
-            'po.paths.lang' => $this->tempLangPath,
             'po.paths.export' => $this->tempExportPath,
             'po.paths.import' => $this->tempImportPath,
         ]);
